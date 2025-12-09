@@ -116,10 +116,31 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// ===== WORK CARDS HOVER EFFECT =====
+// ===== WORK CARDS EXPAND/COLLAPSE =====
 document.querySelectorAll('.work-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+        const isExpanded = this.classList.contains('expanded');
+        
+        // Close all other cards
+        document.querySelectorAll('.work-card').forEach(c => {
+            c.classList.remove('expanded');
+        });
+        
+        // Toggle current card
+        if (!isExpanded) {
+            this.classList.add('expanded');
+            
+            // Smooth scroll to card
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    });
+    
     card.addEventListener('mouseenter', function() {
-        this.style.zIndex = '10';
+        if (!this.classList.contains('expanded')) {
+            this.style.zIndex = '10';
+        }
     });
     
     card.addEventListener('mouseleave', function() {
