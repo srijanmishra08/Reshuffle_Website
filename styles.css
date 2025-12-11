@@ -557,6 +557,13 @@ a {
     object-fit: cover;
 }
 
+.work-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
 .work-title {
     font-size: 1.5rem;
     font-weight: 600;
