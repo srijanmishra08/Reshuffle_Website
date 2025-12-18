@@ -664,6 +664,40 @@ a {
     font-size: 0.8rem;
 }
 
+.work-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--orange);
+    color: var(--white);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 100px;
+    transition: var(--transition);
+}
+
+.work-link:hover {
+    background: var(--orange-light);
+    transform: translateY(-2px);
+}
+
+.work-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.work-links .work-link {
+    margin-top: 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+}
+
 @media (max-width: 1024px) {
     .work-grid {
         grid-template-columns: 1fr;
