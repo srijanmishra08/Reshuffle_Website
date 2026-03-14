@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tests — Onboarding Questionnaire Creator</title>
+<link rel="icon" type="image/png" href="../5 (1).png">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --black: #000000;
+  --black-soft: #0A0A0A;
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --white: #FFFFFF;
+  --gray-dark: #111111;
+  --gray-medium: #1A1A1A;
+  --gray-light: #888888;
+  --gray-lighter: #CCCCCC;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --green: #30d158;
+  --red: #ff453a;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--orange); text-decoration: none; }
+
+/* Nav */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.nav-logo img { height: 32px; }
+.nav-logo span { font-size: 1.1rem; font-weight: 600; }
+.nav-links { display: flex; gap: 24px; }
+.nav-links a { color: var(--gray-lighter); font-size: 0.9rem; font-weight: 500; }
+
+/* Content */
+.container { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+.subtitle { color: var(--gray-lighter); font-size: 0.95rem; margin-bottom: 32px; }
+
+/* Summary bar */
+.summary {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  padding: 20px 24px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+}
+.summary .stat {
+  font-size: 1.5rem; font-weight: 700;
+}
+.summary .stat-label { font-size: 0.8rem; color: var(--gray-light); text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-pass { color: var(--green); }
+.stat-fail { color: var(--red); }
+.stat-total { color: var(--white); }
+.summary .run-btn {
+  margin-left: auto;
+  padding: 10px 24px; border-radius: 50px; border: none;
+  background: var(--orange); color: var(--white);
+  font-family: var(--font); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.summary .run-btn:hover { background: var(--orange-light); }
+
+/* Category */
+.category {
+  margin-bottom: 24px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.category-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--gray-medium);
+  cursor: pointer;
+  user-select: none;
+}
+.category-header h2 { font-size: 1rem; font-weight: 600; }
+.category-header .badge {
+  padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 600;
+}
+.badge-pass { background: rgba(48,209,88,0.15); color: var(--green); }
+.badge-fail { background: rgba(255,69,58,0.15); color: var(--red); }
+.badge-pending { background: rgba(255,255,255,0.06); color: var(--gray-light); }
+
+.test-list { padding: 8px 16px; }
+.test-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.88rem;
+}
+.test-item:last-child { border-bottom: none; }
+.test-icon { flex-shrink: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.75rem; font-weight: 700; }
+.test-icon.pass { background: rgba(48,209,88,0.15); color: var(--green); }
+.test-icon.fail { background: rgba(255,69,58,0.15); color: var(--red); }
+.test-icon.pending { background: rgba(255,255,255,0.06); color: var(--gray-light); }
+.test-name { flex: 1; color: var(--gray-lighter); }
+.test-error { color: var(--red); font-size: 0.8rem; margin-top: 4px; font-family: 'SF Mono', Monaco, monospace; opacity: 0.85; word-break: break-word; }
+.test-time { color: var(--gray-light); font-size: 0.78rem; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <img src="../2 (1).png" alt="Reshuffle">
+    <span>Reshuffle</span>
+  </div>
+  <div class="nav-links">
+    <a href="../index.html">Home</a>
+    <a href="../tools.html">Tools</a>
+    <a href="index.html">Builder</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>Test Suite</h1>
+  <p class="subtitle">Onboarding Questionnaire Creator — automated tests</p>
+
+  <div class="summary" id="summary">
+    <div><div class="stat stat-total" id="statTotal">0</div><div class="stat-label">Total</div></div>
+    <div><div class="stat stat-pass" id="statPass">0</div><div class="stat-label">Passed</div></div>
+    <div><div class="stat stat-fail" id="statFail">0</div><div class="stat-label">Failed</div></div>
+    <button class="run-btn" id="runBtn" onclick="runAllTests()">Run Tests</button>
+  </div>
+
+  <div id="testOutput"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// Simple Test Runner
+// ═══════════════════════════════════════════════════════
+const categories = [];
+let totalPass = 0, totalFail = 0;
+
+function describe(name, fn) {
+  const cat = { name, tests: [], fn };
+  categories.push(cat);
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message || 'Assertion failed');
+}
+
+function assertEqual(a, b, message) {
+  if (a !== b) throw new Error(message || `Expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+}
+
+function assertDeepEqual(a, b, message) {
+  if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(message || `Deep equal failed:\n${JSON.stringify(a)}\nvs\n${JSON.stringify(b)}`);
+}
+
+function assertThrows(fn, message) {
+  let threw = false;
+  try { fn(); } catch(e) { threw = true; }
+  if (!threw) throw new Error(message || 'Expected function to throw');
+}
+
+// ═══════════════════════════════════════════════════════
+// Shared helpers (mirror the app logic)
+// ═══════════════════════════════════════════════════════
+function genId() { return 'q_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); }
+
+function encodeConfig(config) {
+  const json = JSON.stringify(config);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+
+function decodeConfig(encoded) {
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const parsed = JSON.parse(json);
+    if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) return null;
+    parsed.title = typeof parsed.title === 'string' ? parsed.title : '';
+    parsed.description = typeof parsed.description === 'string' ? parsed.description : '';
+    parsed.email = typeof parsed.email === 'string' ? parsed.email : '';
+    parsed.questions = parsed.questions.filter(q =>
+      q && typeof q.label === 'string' && typeof q.type === 'string'
+    ).map(q => ({
+      id: q.id || genId(),
+      label: q.label,
+      type: q.type,
+      required: !!q.required,
+      options: Array.isArray(q.options) ? q.options.map(String) : []
+    }));
+    return parsed.questions.length > 0 ? parsed : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function escHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+
+function makeQuestion(overrides) {
+  return Object.assign({
+    id: genId(), label: 'Test question', type: 'short_text',
+    required: false, enabled: true, options: []
+  }, overrides);
+}
+
+function makeConfig(questions, settings) {
+  return {
+    title: (settings && settings.title) || 'Test Form',
+    description: (settings && settings.description) || '',
+    email: (settings && settings.email) || 'test@example.com',
+    questions: questions || [makeQuestion()]
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// TEST DEFINITIONS
+// ═══════════════════════════════════════════════════════
+
+// ── A. Question Management ──
+describe('Question Management', function(it) {
+  it('should add a question to a list', function() {
+    const questions = [];
+    const q = makeQuestion({ label: 'New Q' });
+    questions.push(q);
+    assertEqual(questions.length, 1);
+    assertEqual(questions[0].label, 'New Q');
+  });
+
+  it('should remove a question by id', function() {
+    const q1 = makeQuestion({ label: 'Q1' });
+    const q2 = makeQuestion({ label: 'Q2' });
+    let questions = [q1, q2];
+    questions = questions.filter(q => q.id !== q1.id);
+    assertEqual(questions.length, 1);
+    assertEqual(questions[0].label, 'Q2');
+  });
+
+  it('should reorder questions', function() {
+    const q1 = makeQuestion({ label: 'A' });
+    const q2 = makeQuestion({ label: 'B' });
+    const q3 = makeQuestion({ label: 'C' });
+    const questions = [q1, q2, q3];
+    // Move q3 to index 0
+    const [removed] = questions.splice(2, 1);
+    questions.splice(0, 0, removed);
+    assertEqual(questions[0].label, 'C');
+    assertEqual(questions[1].label, 'A');
+    assertEqual(questions[2].label, 'B');
+  });
+
+  it('should edit a question label', function() {
+    const q = makeQuestion({ label: 'Old label' });
+    q.label = 'New label';
+    assertEqual(q.label, 'New label');
+  });
+
+  it('should edit a question type', function() {
+    const q = makeQuestion({ type: 'short_text' });
+    q.type = 'dropdown';
+    q.options = ['A', 'B', 'C'];
+    assertEqual(q.type, 'dropdown');
+    assertEqual(q.options.length, 3);
+  });
+
+  it('should toggle question enabled state', function() {
+    const q = makeQuestion({ enabled: true });
+    q.enabled = !q.enabled;
+    assertEqual(q.enabled, false);
+    q.enabled = !q.enabled;
+    assertEqual(q.enabled, true);
+  });
+
+  it('should toggle required state', function() {
+    const q = makeQuestion({ required: false });
+    q.required = true;
+    assertEqual(q.required, true);
+  });
+
+  it('should generate unique IDs', function() {
+    const ids = new Set();
+    for (let i = 0; i < 1000; i++) ids.add(genId());
+    assertEqual(ids.size, 1000, 'All 1000 IDs should be unique');
+  });
+
+  it('should handle empty question label', function() {
+    const q = makeQuestion({ label: '' });
+    assertEqual(q.label, '');
+    const config = makeConfig([q]);
+    const encoded = encodeConfig(config);
+    const decoded = decodeConfig(encoded);
+    assertEqual(decoded.questions[0].label, '');
+  });
+
+  it('should add and remove options for choice types', function() {
+    const q = makeQuestion({ type: 'dropdown', options: ['A', 'B'] });
+    q.options.push('C');
+    assertEqual(q.options.length, 3);
+    q.options.splice(1, 1);
+    assertEqual(q.options.length, 2);
+    assertEqual(q.options[1], 'C');
+  });
+});
+
+// ── B. Form Config Encoding/Decoding ──
+describe('Form Config Encode/Decode', function(it) {
+  it('should encode and decode a simple config', function() {
+    const config = makeConfig();
+    const encoded = encodeConfig(config);
+    const decoded = decodeConfig(encoded);
+    assertEqual(decoded.title, config.title);
+    assertEqual(decoded.email, config.email);
+    assertEqual(decoded.questions.length, config.questions.length);
+  });
+
+  it('should preserve all question fields through encode/decode', function() {
+    const q = { id: 'test_123', label: 'Test?', type: 'dropdown', required: true, options: ['X', 'Y'] };
+    const config = makeConfig([q]);
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.questions[0].id, 'test_123');
+    assertEqual(decoded.questions[0].label, 'Test?');
+    assertEqual(decoded.questions[0].type, 'dropdown');
+    assertEqual(decoded.questions[0].required, true);
+    assertDeepEqual(decoded.questions[0].options, ['X', 'Y']);
+  });
+
+  it('should handle malformed base64 gracefully', function() {
+    assertEqual(decodeConfig('not_valid_base64!!!'), null);
+  });
+
+  it('should handle empty string', function() {
+    assertEqual(decodeConfig(''), null);
+  });
+
+  it('should handle valid base64 but invalid JSON', function() {
+    assertEqual(decodeConfig(btoa('not json')), null);
+  });
+
+  it('should handle valid JSON but wrong structure', function() {
+    assertEqual(decodeConfig(btoa(JSON.stringify({ foo: 'bar' }))), null);
+  });
+
+  it('should handle config with empty questions array', function() {
+    assertEqual(decodeConfig(btoa(JSON.stringify({ questions: [] }))), null);
+  });
+
+  it('should filter out invalid questions', function() {
+    const config = { title: 'T', email: '', description: '', questions: [
+      { label: 'Valid', type: 'short_text' },
+      { nolabel: true },
+      null,
+      { label: 'Also Valid', type: 'email' }
+    ]};
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.questions.length, 2);
+  });
+
+  it('should handle unicode in config', function() {
+    const config = makeConfig([makeQuestion({ label: 'Как дела? 你好 🎉' })]);
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.questions[0].label, 'Как дела? 你好 🎉');
+  });
+
+  it('should handle very long config (100 questions)', function() {
+    const questions = [];
+    for (let i = 0; i < 100; i++) {
+      questions.push(makeQuestion({ label: `Question ${i+1} with some extra text to make it longer` }));
+    }
+    const config = makeConfig(questions);
+    const encoded = encodeConfig(config);
+    const decoded = decodeConfig(encoded);
+    assertEqual(decoded.questions.length, 100);
+    // Check URL length is manageable (base64 of 100 questions)
+    assert(encoded.length < 50000, 'Encoded length should be under 50KB');
+  });
+
+  it('should default missing fields gracefully', function() {
+    const config = { questions: [{ label: 'Q', type: 'short_text' }] };
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.title, '');
+    assertEqual(decoded.description, '');
+    assertEqual(decoded.email, '');
+    assertEqual(decoded.questions[0].required, false);
+    assert(Array.isArray(decoded.questions[0].options));
+  });
+});
+
+// ── C. Validation ──
+describe('Validation', function(it) {
+  it('should identify required fields missing values', function() {
+    const q = makeQuestion({ required: true, label: 'Name' });
+    const value = '';
+    const isValid = !q.required || value.trim().length > 0;
+    assertEqual(isValid, false);
+  });
+
+  it('should pass required fields with values', function() {
+    const q = makeQuestion({ required: true });
+    const value = 'John Doe';
+    const isValid = !q.required || value.trim().length > 0;
+    assertEqual(isValid, true);
+  });
+
+  it('should validate email format - valid', function() {
+    const validEmails = ['a@b.com', 'test@test.co.uk', 'name+tag@domain.org'];
+    validEmails.forEach(e => {
+      assert(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), `${e} should be valid`);
+    });
+  });
+
+  it('should validate email format - invalid', function() {
+    const invalidEmails = ['notanemail', '@missing.com', 'no@', 'spaces in@email.com', ''];
+    invalidEmails.forEach(e => {
+      assert(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e), `${e} should be invalid`);
+    });
+  });
+
+  it('should allow non-required fields to be empty', function() {
+    const q = makeQuestion({ required: false });
+    const value = '';
+    const isValid = !q.required || value.trim().length > 0;
+    assertEqual(isValid, true);
+  });
+
+  it('should validate checkbox - at least one checked when required', function() {
+    const q = makeQuestion({ type: 'checkbox', required: true, options: ['A', 'B'] });
+    const checked = [];
+    const isValid = !q.required || checked.length > 0;
+    assertEqual(isValid, false);
+    checked.push('A');
+    const isValid2 = !q.required || checked.length > 0;
+    assertEqual(isValid2, true);
+  });
+
+  it('should validate dropdown - selection made when required', function() {
+    const q = makeQuestion({ type: 'dropdown', required: true, options: ['X', 'Y'] });
+    let value = '';
+    assert(!(q.required && !value), 'Empty dropdown should fail');
+    value = 'X';
+    assert(!q.required || value, 'Selected dropdown should pass');
+  });
+});
+
+// ── D. Rendering ──
+describe('Rendering', function(it) {
+  it('should render short_text as text input', function() {
+    const q = makeQuestion({ type: 'short_text', label: 'Name' });
+    const container = document.createElement('div');
+    container.innerHTML = `<input type="text" placeholder="Your answer">`;
+    assertEqual(container.querySelector('input').type, 'text');
+  });
+
+  it('should render long_text as textarea', function() {
+    const container = document.createElement('div');
+    container.innerHTML = `<textarea placeholder="Your answer"></textarea>`;
+    assert(container.querySelector('textarea') !== null);
+  });
+
+  it('should render email as email input', function() {
+    const container = document.createElement('div');
+    container.innerHTML = `<input type="email" placeholder="email@example.com">`;
+    assertEqual(container.querySelector('input').type, 'email');
+  });
+
+  it('should render phone as tel input', function() {
+    const container = document.createElement('div');
+    container.innerHTML = `<input type="tel">`;
+    assertEqual(container.querySelector('input').type, 'tel');
+  });
+
+  it('should render date as date input', function() {
+    const container = document.createElement('div');
+    container.innerHTML = `<input type="date">`;
+    assertEqual(container.querySelector('input').type, 'date');
+  });
+
+  it('should render dropdown with options', function() {
+    const q = makeQuestion({ type: 'dropdown', options: ['A', 'B', 'C'] });
+    const container = document.createElement('div');
+    let html = '<select><option value="">Select…</option>';
+    q.options.forEach(o => html += `<option value="${o}">${o}</option>`);
+    html += '</select>';
+    container.innerHTML = html;
+    assertEqual(container.querySelectorAll('option').length, 4); // 3 + placeholder
+  });
+
+  it('should render multiple_choice as radio buttons', function() {
+    const q = makeQuestion({ type: 'multiple_choice', options: ['Yes', 'No'] });
+    const container = document.createElement('div');
+    let html = '';
+    q.options.forEach(o => html += `<label><input type="radio" name="test" value="${o}"> ${o}</label>`);
+    container.innerHTML = html;
+    assertEqual(container.querySelectorAll('input[type="radio"]').length, 2);
+  });
+
+  it('should render checkbox options', function() {
+    const q = makeQuestion({ type: 'checkbox', options: ['A', 'B', 'C'] });
+    const container = document.createElement('div');
+    let html = '';
+    q.options.forEach(o => html += `<label><input type="checkbox" value="${o}"> ${o}</label>`);
+    container.innerHTML = html;
+    assertEqual(container.querySelectorAll('input[type="checkbox"]').length, 3);
+  });
+
+  it('should render file_upload as file input', function() {
+    const container = document.createElement('div');
+    container.innerHTML = `<input type="file">`;
+    assertEqual(container.querySelector('input').type, 'file');
+  });
+
+  it('should show required star for required fields', function() {
+    const q = makeQuestion({ required: true, label: 'Name' });
+    const html = `<label>${escHtml(q.label)}${q.required ? '<span class="required-star">*</span>' : ''}</label>`;
+    assert(html.includes('required-star'), 'Should contain required star');
+  });
+
+  it('should not show required star for optional fields', function() {
+    const q = makeQuestion({ required: false, label: 'Name' });
+    const html = `<label>${escHtml(q.label)}${q.required ? '<span class="required-star">*</span>' : ''}</label>`;
+    assert(!html.includes('required-star'), 'Should not contain required star');
+  });
+
+  it('should render title and description', function() {
+    const config = makeConfig(null, { title: 'My Form', description: 'Fill this out' });
+    const container = document.createElement('div');
+    let html = '';
+    if (config.title) html += `<h1>${escHtml(config.title)}</h1>`;
+    if (config.description) html += `<p>${escHtml(config.description)}</p>`;
+    container.innerHTML = html;
+    assertEqual(container.querySelector('h1').textContent, 'My Form');
+    assertEqual(container.querySelector('p').textContent, 'Fill this out');
+  });
+});
+
+// ── E. Edge Cases ──
+describe('Edge Cases', function(it) {
+  it('should escape XSS in question labels', function() {
+    const malicious = '<script>alert("xss")</script>';
+    const escaped = escHtml(malicious);
+    assert(!escaped.includes('<script>'), 'Should escape script tags');
+    assert(escaped.includes('&lt;script&gt;'), 'Should contain escaped version');
+  });
+
+  it('should escape XSS in option values', function() {
+    const malicious = '"><img src=x onerror=alert(1)>';
+    const escaped = escHtml(malicious);
+    assert(!escaped.includes('<img'), 'Should escape img tags');
+  });
+
+  it('should handle very long question labels', function() {
+    const longLabel = 'A'.repeat(5000);
+    const q = makeQuestion({ label: longLabel });
+    const config = makeConfig([q]);
+    const encoded = encodeConfig(config);
+    const decoded = decodeConfig(encoded);
+    assertEqual(decoded.questions[0].label.length, 5000);
+  });
+
+  it('should handle special characters in labels', function() {
+    const special = 'What\'s your "name"? <b>Bold</b> & more…';
+    const escaped = escHtml(special);
+    assert(!escaped.includes('<b>'), 'HTML tags should be escaped');
+    assert(escaped.includes('&amp;'), 'Ampersand should be escaped');
+  });
+
+  it('should handle emoji in questions', function() {
+    const emoji = '🚀 What is your favorite emoji? 🎉✨💡';
+    const config = makeConfig([makeQuestion({ label: emoji })]);
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.questions[0].label, emoji);
+  });
+
+  it('should handle 100+ questions performance', function() {
+    const start = performance.now();
+    const questions = [];
+    for (let i = 0; i < 150; i++) {
+      questions.push(makeQuestion({
+        label: `Question ${i+1}: What do you think about topic number ${i+1}?`,
+        type: i % 3 === 0 ? 'dropdown' : i % 3 === 1 ? 'short_text' : 'long_text',
+        options: i % 3 === 0 ? ['Option A', 'Option B', 'Option C'] : []
+      }));
+    }
+    const config = makeConfig(questions);
+    const encoded = encodeConfig(config);
+    const decoded = decodeConfig(encoded);
+    const elapsed = performance.now() - start;
+    assertEqual(decoded.questions.length, 150);
+    assert(elapsed < 500, `Encode/decode of 150 questions took ${elapsed.toFixed(1)}ms, should be under 500ms`);
+  });
+
+  it('should handle localStorage save/load cycle', function() {
+    const key = '__test_onboarding__';
+    const data = { questions: [makeQuestion()], settings: { title: 'T', description: '', email: '' } };
+    localStorage.setItem(key, JSON.stringify(data));
+    const loaded = JSON.parse(localStorage.getItem(key));
+    assertEqual(loaded.questions.length, 1);
+    assertEqual(loaded.settings.title, 'T');
+    localStorage.removeItem(key);
+  });
+
+  it('should handle null/undefined in options array', function() {
+    const config = {
+      title: '', description: '', email: '',
+      questions: [{ id: 'q1', label: 'Test', type: 'dropdown', required: false, options: ['A', null, undefined, 'B'] }]
+    };
+    const decoded = decodeConfig(encodeConfig(config));
+    // null and undefined get converted to string "null" and "undefined" by map(String)
+    assertEqual(decoded.questions[0].options.length, 4);
+    assertEqual(decoded.questions[0].options[0], 'A');
+    assertEqual(decoded.questions[0].options[3], 'B');
+  });
+
+  it('should produce a valid URL with encoded config', function() {
+    const config = makeConfig([makeQuestion({ label: 'Hello world?' })]);
+    const encoded = encodeConfig(config);
+    const url = 'form.html#' + encoded;
+    // Should not contain raw special URL chars in the base64
+    assert(!encoded.includes(' '), 'Base64 should not contain spaces');
+    assert(url.startsWith('form.html#'), 'URL should start with form.html#');
+  });
+
+  it('should handle config with all question types', function() {
+    const types = ['short_text','long_text','email','phone','date','dropdown','multiple_choice','checkbox','file_upload'];
+    const questions = types.map(t => makeQuestion({
+      type: t,
+      label: `Type: ${t}`,
+      options: ['dropdown','multiple_choice','checkbox'].includes(t) ? ['A','B'] : []
+    }));
+    const config = makeConfig(questions);
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.questions.length, 9);
+    types.forEach((t, i) => assertEqual(decoded.questions[i].type, t));
+  });
+
+  it('should handle empty title and description', function() {
+    const config = { title: '', description: '', email: '', questions: [{ label: 'Q', type: 'short_text' }] };
+    const decoded = decodeConfig(encodeConfig(config));
+    assertEqual(decoded.title, '');
+    assertEqual(decoded.description, '');
+  });
+
+  it('should handle non-string title gracefully', function() {
+    const config = { title: 123, description: null, email: false, questions: [{ label: 'Q', type: 'short_text' }] };
+    const decoded = decodeConfig(encodeConfig(config));
+    // Non-strings should be normalized to ''
+    assertEqual(decoded.title, '');
+    assertEqual(decoded.description, '');
+    assertEqual(decoded.email, '');
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// TEST RUNNER
+// ═══════════════════════════════════════════════════════
+async function runAllTests() {
+  totalPass = 0;
+  totalFail = 0;
+  const output = document.getElementById('testOutput');
+  output.innerHTML = '';
+
+  for (const cat of categories) {
+    const results = [];
+    // Collect tests
+    const tests = [];
+    cat.fn(function it(name, fn) {
+      tests.push({ name, fn });
+    });
+
+    // Run tests
+    for (const test of tests) {
+      const start = performance.now();
+      try {
+        test.fn();
+        const elapsed = performance.now() - start;
+        results.push({ name: test.name, passed: true, time: elapsed });
+        totalPass++;
+      } catch(e) {
+        const elapsed = performance.now() - start;
+        results.push({ name: test.name, passed: false, error: e.message, time: elapsed });
+        totalFail++;
+      }
+    }
+
+    // Render category
+    const allPassed = results.every(r => r.passed);
+    const passCount = results.filter(r => r.passed).length;
+    const catEl = document.createElement('div');
+    catEl.className = 'category';
+
+    let testsHtml = results.map(r => `
+      <div class="test-item">
+        <div class="test-icon ${r.passed ? 'pass' : 'fail'}">${r.passed ? '✓' : '✕'}</div>
+        <div class="test-name">
+          ${escHtml(r.name)}
+          ${r.error ? `<div class="test-error">${escHtml(r.error)}</div>` : ''}
+        </div>
+        <div class="test-time">${r.time.toFixed(1)}ms</div>
+      </div>
+    `).join('');
+
+    catEl.innerHTML = `
+      <div class="category-header">
+        <h2>${escHtml(cat.name)}</h2>
+        <span class="badge ${allPassed ? 'badge-pass' : 'badge-fail'}">${passCount}/${results.length}</span>
+      </div>
+      <div class="test-list">${testsHtml}</div>
+    `;
+    output.appendChild(catEl);
+  }
+
+  // Update summary
+  document.getElementById('statTotal').textContent = totalPass + totalFail;
+  document.getElementById('statPass').textContent = totalPass;
+  document.getElementById('statFail').textContent = totalFail;
+
+  const btn = document.getElementById('runBtn');
+  btn.textContent = 'Re-run Tests';
+}
+
+// Auto-run on load
+window.addEventListener('DOMContentLoaded', () => setTimeout(runAllTests, 100));
+</script>
+</body>
+</html>

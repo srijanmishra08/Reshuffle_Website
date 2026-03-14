@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Agreement Generator — Reshuffle</title>
+<link rel="icon" type="image/png" href="../5 (1).png">
+<style>
+:root {
+  --black: #000000;
+  --black-soft: #0A0A0A;
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --white: #FFFFFF;
+  --gray-dark: #111111;
+  --gray-medium: #1A1A1A;
+  --gray-light: #888888;
+  --gray-lighter: #CCCCCC;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === NAV === */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 0 40px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.nav-logo img { height: 32px; }
+.nav-logo span { color: var(--white); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  color: var(--gray-light);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+.nav-links a:hover, .nav-links a.active { color: var(--white); }
+
+/* === MAIN LAYOUT === */
+.main { padding: 104px 40px 60px; max-width: 860px; margin: 0 auto; }
+
+.page-title {
+  font-size: 40px; font-weight: 700; letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+.page-title span { color: var(--orange); }
+.page-subtitle { color: var(--gray-light); font-size: 16px; margin-bottom: 40px; }
+
+/* === STEP INDICATOR === */
+.steps-bar {
+  display: flex; gap: 4px; margin-bottom: 40px;
+  background: var(--gray-dark);
+  border-radius: 50px;
+  padding: 6px;
+  overflow-x: auto;
+}
+.step-pill {
+  flex: 1; min-width: 0;
+  padding: 10px 12px;
+  border-radius: 50px;
+  font-size: 13px; font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--gray-light);
+  background: transparent;
+  white-space: nowrap;
+  border: none;
+  font-family: var(--font);
+}
+.step-pill.active { background: var(--orange); color: var(--white); }
+.step-pill.completed { background: rgba(255,107,53,0.15); color: var(--orange); }
+.step-pill:hover:not(.active) { color: var(--white); }
+.step-pill .step-num { display: inline; }
+
+/* === FORM SECTIONS === */
+.form-step { display: none; animation: fadeIn 0.3s ease; }
+.form-step.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-title {
+  font-size: 24px; font-weight: 600; letter-spacing: -0.5px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.field-group { margin-bottom: 24px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+label {
+  display: block;
+  font-size: 13px; font-weight: 500;
+  color: var(--gray-lighter);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+label .req { color: var(--orange); margin-left: 2px; }
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 15px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,107,53,0.15);
+}
+input.invalid, textarea.invalid, select.invalid {
+  border-color: #ff4444;
+  box-shadow: 0 0 0 3px rgba(255,68,68,0.15);
+}
+textarea { resize: vertical; min-height: 100px; }
+select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+.error-msg {
+  color: #ff4444; font-size: 12px; margin-top: 4px; display: none;
+}
+.error-msg.visible { display: block; }
+
+/* Toggle switch */
+.toggle-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.toggle {
+  position: relative; width: 48px; height: 28px; cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  transition: background var(--transition);
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 22px; height: 22px;
+  left: 2px; top: 2px;
+  background: var(--white);
+  border-radius: 50%;
+  transition: transform var(--transition);
+}
+.toggle input:checked + .toggle-slider { background: var(--orange); border-color: var(--orange); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+.toggle-label { font-size: 14px; color: var(--gray-lighter); }
+
+/* Radio group */
+.radio-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.radio-option {
+  position: relative;
+}
+.radio-option input { position: absolute; opacity: 0; }
+.radio-option label {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 50px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--gray-lighter);
+  transition: all var(--transition);
+  margin-bottom: 0;
+}
+.radio-option input:checked + label {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--white);
+}
+.radio-option label:hover { border-color: var(--orange); color: var(--white); }
+
+/* Dynamic list */
+.dynamic-list { margin-top: 12px; }
+.dynamic-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 12px;
+  padding: 16px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.dynamic-item .field-inner { flex: 1; }
+.dynamic-item .field-inner + .field-inner { flex: 0 0 160px; }
+.dynamic-item input, .dynamic-item textarea { background: var(--gray-medium); }
+
+.btn-remove {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border: none; border-radius: 50%;
+  background: rgba(255,68,68,0.1);
+  color: #ff4444;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  margin-top: 22px;
+}
+.btn-remove:hover { background: rgba(255,68,68,0.25); }
+
+.btn-add {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  border: 1px dashed rgba(255,107,53,0.4);
+  border-radius: 50px;
+  background: transparent;
+  color: var(--orange);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-top: 4px;
+}
+.btn-add:hover { background: rgba(255,107,53,0.08); border-color: var(--orange); }
+
+/* Buttons */
+.btn-row {
+  display: flex; gap: 12px; margin-top: 36px; padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 14px 32px;
+  border-radius: 50px;
+  border: none;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
+.btn-secondary {
+  background: transparent;
+  color: var(--gray-lighter);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.btn-secondary:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+.btn-ghost { background: transparent; color: var(--gray-light); }
+.btn-ghost:hover { color: var(--white); }
+
+.btn-row .spacer { flex: 1; }
+
+/* Draft buttons */
+.draft-actions {
+  display: flex; gap: 10px; margin-bottom: 32px;
+}
+
+/* Currency input group */
+.currency-group {
+  display: flex; gap: 0;
+}
+.currency-group select {
+  flex: 0 0 90px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+}
+.currency-group input {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* === PREVIEW === */
+.preview-actions {
+  display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+}
+
+#agreement-preview {
+  background: var(--white);
+  color: #111;
+  padding: 60px;
+  border-radius: var(--radius);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.8;
+  max-width: 100%;
+  font-size: 14px;
+}
+#agreement-preview h1 {
+  font-size: 26px; text-align: center; margin-bottom: 4px;
+  color: #111; font-weight: 700; letter-spacing: -0.5px;
+}
+#agreement-preview .doc-subtitle {
+  text-align: center; color: #666; font-size: 13px; margin-bottom: 6px;
+}
+#agreement-preview .doc-number {
+  text-align: center; color: #999; font-size: 12px; margin-bottom: 32px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+#agreement-preview h2 {
+  font-size: 16px; font-weight: 700; margin: 28px 0 12px;
+  padding-bottom: 6px; border-bottom: 2px solid #eee;
+  color: #222; text-transform: uppercase; letter-spacing: 0.5px;
+}
+#agreement-preview h3 {
+  font-size: 14px; font-weight: 700; margin: 16px 0 8px; color: #333;
+}
+#agreement-preview p { margin-bottom: 10px; text-align: justify; }
+#agreement-preview table {
+  width: 100%; border-collapse: collapse; margin: 12px 0;
+}
+#agreement-preview th, #agreement-preview td {
+  border: 1px solid #ddd; padding: 10px 14px; text-align: left; font-size: 13px;
+}
+#agreement-preview th { background: #f5f5f5; font-weight: 600; color: #333; }
+#agreement-preview .sig-block {
+  display: flex; gap: 60px; margin-top: 48px; page-break-inside: avoid;
+}
+#agreement-preview .sig-col { flex: 1; }
+#agreement-preview .sig-line {
+  border-top: 1px solid #333; margin-top: 60px; padding-top: 8px;
+  font-size: 13px; color: #555;
+}
+#agreement-preview .sig-name { font-weight: 600; color: #111; margin-top: 4px; }
+#agreement-preview .doc-footer {
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid #eee;
+  font-size: 11px; color: #999; text-align: center;
+}
+#agreement-preview ul {
+  margin: 8px 0 12px 20px;
+}
+#agreement-preview li { margin-bottom: 4px; }
+#agreement-preview .clause-num { color: #666; font-weight: 600; }
+
+/* === TOAST === */
+.toast {
+  position: fixed; bottom: 30px; right: 30px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--white);
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  z-index: 200;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 3px solid #4caf50; }
+.toast.error { border-left: 3px solid #ff4444; }
+
+/* === PRINT === */
+@media print {
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body { background: white !important; }
+  .nav, .steps-bar, .btn-row, .preview-actions, .page-title, .page-subtitle,
+  .draft-actions, .form-step:not(.step-preview) { display: none !important; }
+  .main { padding: 0 !important; max-width: 100% !important; }
+  #agreement-preview {
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  #agreement-preview h1 { font-size: 24px !important; }
+  #agreement-preview .sig-block { page-break-inside: avoid; }
+  table, .sig-block { page-break-inside: avoid; }
+  @page { margin: 20mm; }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .nav { padding: 0 20px; }
+  .main { padding: 84px 20px 40px; }
+  .page-title { font-size: 28px; }
+  .field-row, .field-row.three { grid-template-columns: 1fr; }
+  .steps-bar { padding: 4px; gap: 2px; }
+  .step-pill { padding: 8px 8px; font-size: 11px; }
+  .step-pill .step-num { display: none; }
+  #agreement-preview { padding: 30px 20px; }
+  #agreement-preview .sig-block { flex-direction: column; gap: 40px; }
+  .btn-row { flex-direction: column; }
+  .btn { width: 100%; justify-content: center; }
+  .dynamic-item { flex-direction: column; }
+  .dynamic-item .field-inner + .field-inner { flex: 1; }
+  .btn-remove { margin-top: 0; align-self: flex-end; }
+}
+@media (max-width: 480px) {
+  .radio-group { flex-direction: column; }
+  .draft-actions { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="../index.html" class="nav-logo">
+    <img src="../2 (1).png" alt="Reshuffle">
+    <span>Reshuffle</span>
+  </a>
+  <div class="nav-links">
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#work">Work</a>
+    <a href="../tools.html">Tools</a>
+    <a href="../index.html#connect">Connect</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <h1 class="page-title">Service Agreement <span>Generator</span></h1>
+  <p class="page-subtitle">Create professional, legally-structured service agreements in minutes.</p>
+
+  <!-- Draft actions -->
+  <div class="draft-actions">
+    <button class="btn btn-secondary" onclick="saveDraft()" id="btn-save-draft">💾 Save Draft</button>
+    <button class="btn btn-secondary" onclick="loadDraft()" id="btn-load-draft">📂 Load Draft</button>
+    <button class="btn btn-ghost" onclick="clearDraft()" id="btn-clear-draft">🗑 Clear Draft</button>
+  </div>
+
+  <!-- STEPS BAR -->
+  <div class="steps-bar" id="steps-bar">
+    <button class="step-pill active" data-step="0"><span class="step-num">1. </span>Parties</button>
+    <button class="step-pill" data-step="1"><span class="step-num">2. </span>Project</button>
+    <button class="step-pill" data-step="2"><span class="step-num">3. </span>Timeline</button>
+    <button class="step-pill" data-step="3"><span class="step-num">4. </span>Payment</button>
+    <button class="step-pill" data-step="4"><span class="step-num">5. </span>Terms</button>
+    <button class="step-pill" data-step="5"><span class="step-num">6. </span>Clauses</button>
+    <button class="step-pill" data-step="6"><span class="step-num">7. </span>Preview</button>
+  </div>
+
+  <!-- FORM -->
+  <form id="agreement-form" novalidate>
+
+    <!-- STEP 0: Parties -->
+    <div class="form-step active" data-step="0">
+      <h2 class="section-title">Parties Information</h2>
+      <h3 style="color:var(--orange);margin-bottom:16px;">Your Details (Freelancer / Service Provider)</h3>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Your Name / Business Name <span class="req">*</span></label>
+          <input type="text" name="freelancerName" required data-label="Your Name">
+          <div class="error-msg">Please enter your name or business name.</div>
+        </div>
+        <div class="field-group">
+          <label>Your Email <span class="req">*</span></label>
+          <input type="email" name="freelancerEmail" required data-label="Your Email">
+          <div class="error-msg">Please enter a valid email address.</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Your Address <span class="req">*</span></label>
+        <textarea name="freelancerAddress" rows="3" required data-label="Your Address"></textarea>
+        <div class="error-msg">Please enter your address.</div>
+      </div>
+
+      <h3 style="color:var(--orange);margin:28px 0 16px;">Client Details</h3>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Client Name / Business Name <span class="req">*</span></label>
+          <input type="text" name="clientName" required data-label="Client Name">
+          <div class="error-msg">Please enter the client's name or business name.</div>
+        </div>
+        <div class="field-group">
+          <label>Client Email <span class="req">*</span></label>
+          <input type="email" name="clientEmail" required data-label="Client Email">
+          <div class="error-msg">Please enter a valid email address.</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Client Address <span class="req">*</span></label>
+        <textarea name="clientAddress" rows="3" required data-label="Client Address"></textarea>
+        <div class="error-msg">Please enter the client's address.</div>
+      </div>
+
+      <div class="btn-row">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 1: Project Details -->
+    <div class="form-step" data-step="1">
+      <h2 class="section-title">Project Details</h2>
+      <div class="field-group">
+        <label>Project Title <span class="req">*</span></label>
+        <input type="text" name="projectTitle" required data-label="Project Title">
+        <div class="error-msg">Please enter a project title.</div>
+      </div>
+      <div class="field-group">
+        <label>Project Description / Scope of Work <span class="req">*</span></label>
+        <textarea name="projectDescription" rows="6" required data-label="Scope of Work" placeholder="Describe the project scope in detail..."></textarea>
+        <div class="error-msg">Please describe the project scope.</div>
+      </div>
+      <div class="field-group">
+        <label>Deliverables <span class="req">*</span></label>
+        <textarea name="deliverables" rows="4" required data-label="Deliverables" placeholder="List specific deliverables, one per line..."></textarea>
+        <div class="error-msg">Please list the deliverables.</div>
+      </div>
+      <div class="field-group">
+        <label>Exclusions</label>
+        <textarea name="exclusions" rows="3" placeholder="What is NOT included in this project..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Timeline -->
+    <div class="form-step" data-step="2">
+      <h2 class="section-title">Timeline</h2>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Start Date <span class="req">*</span></label>
+          <input type="date" name="startDate" required data-label="Start Date">
+          <div class="error-msg">Please select a start date.</div>
+        </div>
+        <div class="field-group">
+          <label>End Date <span class="req">*</span></label>
+          <input type="date" name="endDate" required data-label="End Date">
+          <div class="error-msg">End date must be after start date.</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Milestones</label>
+        <div class="dynamic-list" id="milestones-list"></div>
+        <button type="button" class="btn-add" onclick="addMilestone()">+ Add Milestone</button>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Payment Terms -->
+    <div class="form-step" data-step="3">
+      <h2 class="section-title">Payment Terms</h2>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Total Project Fee <span class="req">*</span></label>
+          <div class="currency-group">
+            <select name="currency">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="INR">INR</option>
+            </select>
+            <input type="number" name="totalFee" min="0" step="0.01" required data-label="Total Fee" placeholder="0.00">
+          </div>
+          <div class="error-msg">Please enter a valid total fee.</div>
+        </div>
+        <div class="field-group">
+          <label>Late Payment Fee (%)</label>
+          <input type="number" name="lateFee" min="0" max="100" step="0.1" placeholder="e.g., 1.5">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Payment Structure <span class="req">*</span></label>
+        <div class="radio-group" id="payment-structure-group">
+          <div class="radio-option">
+            <input type="radio" name="paymentStructure" id="ps-full" value="full" checked>
+            <label for="ps-full">Full Upfront</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="paymentStructure" id="ps-5050" value="5050">
+            <label for="ps-5050">50/50</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="paymentStructure" id="ps-milestone" value="milestone">
+            <label for="ps-milestone">Milestone-based</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="paymentStructure" id="ps-custom" value="custom">
+            <label for="ps-custom">Custom</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Milestone payments -->
+      <div class="field-group" id="milestone-payments-section" style="display:none;">
+        <label>Milestone Payments</label>
+        <p style="font-size:13px;color:var(--gray-light);margin-bottom:12px;">Assign amounts to each milestone. Amounts should sum to the total fee.</p>
+        <div id="milestone-payments-list"></div>
+        <div id="milestone-sum-msg" style="font-size:13px;margin-top:8px;"></div>
+      </div>
+
+      <!-- Custom payment -->
+      <div class="field-group" id="custom-payment-section" style="display:none;">
+        <label>Custom Payment Schedule <span class="req">*</span></label>
+        <textarea name="customPayment" rows="4" placeholder="Describe your payment schedule..."></textarea>
+        <div class="error-msg">Please describe the payment schedule.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Payment Method</label>
+        <input type="text" name="paymentMethod" placeholder="e.g., Bank Transfer, PayPal, Wise">
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Terms & Conditions -->
+    <div class="form-step" data-step="4">
+      <h2 class="section-title">Terms & Conditions</h2>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Revision Policy <span class="req">*</span></label>
+          <select name="revisionPolicy" required>
+            <option value="unlimited">Unlimited Revisions</option>
+            <option value="1">1 Round of Revisions</option>
+            <option value="2" selected>2 Rounds of Revisions</option>
+            <option value="3">3 Rounds of Revisions</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Cancellation Fee (%)</label>
+          <input type="number" name="cancellationFee" min="0" max="100" step="0.1" placeholder="e.g., 25">
+        </div>
+      </div>
+
+      <div class="field-group" id="custom-revision-section" style="display:none;">
+        <label>Custom Revision Policy</label>
+        <textarea name="customRevision" rows="3" placeholder="Describe your revision policy..."></textarea>
+      </div>
+
+      <div class="field-group">
+        <label>Intellectual Property Transfer <span class="req">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="ipTransfer" id="ip-full" value="full" checked>
+            <label for="ip-full">Full transfer on payment</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="ipTransfer" id="ip-licensed" value="licensed">
+            <label for="ip-licensed">Licensed use only</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="ipTransfer" id="ip-shared" value="shared">
+            <label for="ip-shared">Shared ownership</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confidentiality -->
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" name="confidentiality" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">Include Confidentiality Clause</span>
+        </div>
+        <div id="confidentiality-text-section">
+          <textarea name="confidentialityText" rows="4">Both parties agree to keep all project-related information, including but not limited to business strategies, technical data, financial information, and proprietary materials, strictly confidential. Neither party shall disclose such information to any third party without prior written consent of the other party. This obligation shall survive the termination of this agreement for a period of two (2) years.</textarea>
+        </div>
+      </div>
+
+      <!-- Termination -->
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" name="termination" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">Include Termination Clause</span>
+        </div>
+        <div id="termination-text-section">
+          <textarea name="terminationText" rows="4">Either party may terminate this agreement with fourteen (14) days written notice. In the event of termination, the Client shall pay for all work completed up to the date of termination. Any deposits or advance payments for uncompleted work shall be refunded on a pro-rata basis, minus the cancellation fee specified herein.</textarea>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Governing Law / Jurisdiction</label>
+        <input type="text" name="jurisdiction" placeholder="e.g., State of California, United States">
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Additional Clauses -->
+    <div class="form-step" data-step="5">
+      <h2 class="section-title">Additional Clauses</h2>
+      <p style="color:var(--gray-light);margin-bottom:20px;">Add any custom clauses you'd like to include in the agreement.</p>
+      <div class="dynamic-list" id="clauses-list"></div>
+      <button type="button" class="btn-add" onclick="addClause()">+ Add Custom Clause</button>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" onclick="nextStep()">Generate Preview →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: Preview -->
+    <div class="form-step step-preview" data-step="6">
+      <h2 class="section-title">Agreement Preview</h2>
+      <div class="preview-actions">
+        <button type="button" class="btn btn-primary" onclick="downloadPDF()">📄 Download PDF</button>
+        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Edit Agreement</button>
+      </div>
+      <div id="agreement-preview"></div>
+    </div>
+
+  </form>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ STATE ============
+let currentStep = 0;
+const totalSteps = 7;
+let agreementNumber = '';
+
+// ============ HELPERS ============
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatCurrency(amount, currency) {
+  const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹' };
+  const sym = symbols[currency] || currency + ' ';
+  const num = parseFloat(amount);
+  if (isNaN(num)) return sym + '0.00';
+  return sym + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function generateAgreementNumber() {
+  const year = new Date().getFullYear();
+  const rand = String(Math.floor(1000 + Math.random() * 9000));
+  return 'SA-' + year + '-' + rand;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || 'success') + ' show';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function getFormData() {
+  const form = document.getElementById('agreement-form');
+  const data = {};
+  // Text, email, number, date inputs, textareas, selects
+  form.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea, select').forEach(el => {
+    if (el.name) data[el.name] = el.value;
+  });
+  // Radios
+  form.querySelectorAll('input[type="radio"]:checked').forEach(el => {
+    data[el.name] = el.value;
+  });
+  // Checkboxes
+  form.querySelectorAll('input[type="checkbox"]').forEach(el => {
+    if (el.name) data[el.name] = el.checked;
+  });
+  // Milestones
+  data.milestones = [];
+  document.querySelectorAll('#milestones-list .dynamic-item').forEach(item => {
+    const name = item.querySelector('input[data-field="milestone-name"]')?.value || '';
+    const date = item.querySelector('input[data-field="milestone-date"]')?.value || '';
+    if (name || date) data.milestones.push({ name, date });
+  });
+  // Milestone payments
+  data.milestonePayments = [];
+  document.querySelectorAll('#milestone-payments-list .mp-row').forEach(row => {
+    const name = row.querySelector('.mp-name')?.textContent || '';
+    const amount = row.querySelector('input')?.value || '0';
+    data.milestonePayments.push({ name, amount });
+  });
+  // Custom clauses
+  data.customClauses = [];
+  document.querySelectorAll('#clauses-list .dynamic-item').forEach(item => {
+    const title = item.querySelector('input[data-field="clause-title"]')?.value || '';
+    const body = item.querySelector('textarea[data-field="clause-body"]')?.value || '';
+    if (title || body) data.customClauses.push({ title, body });
+  });
+  data.agreementNumber = agreementNumber;
+  return data;
+}
+
+function setFormData(data) {
+  if (!data) return;
+  const form = document.getElementById('agreement-form');
+  // Simple fields
+  Object.keys(data).forEach(key => {
+    if (['milestones', 'milestonePayments', 'customClauses', 'agreementNumber'].includes(key)) return;
+    const el = form.querySelector(`[name="${key}"]`);
+    if (!el) return;
+    if (el.type === 'radio') {
+      const radio = form.querySelector(`input[name="${key}"][value="${data[key]}"]`);
+      if (radio) radio.checked = true;
+    } else if (el.type === 'checkbox') {
+      el.checked = !!data[key];
+    } else {
+      el.value = data[key] || '';
+    }
+  });
+  // Milestones
+  const ml = document.getElementById('milestones-list');
+  ml.innerHTML = '';
+  if (data.milestones?.length) {
+    data.milestones.forEach(m => addMilestone(m.name, m.date));
+  }
+  // Custom clauses
+  const cl = document.getElementById('clauses-list');
+  cl.innerHTML = '';
+  if (data.customClauses?.length) {
+    data.customClauses.forEach(c => addClause(c.title, c.body));
+  }
+  if (data.agreementNumber) agreementNumber = data.agreementNumber;
+  // Trigger conditional shows
+  updatePaymentVisibility();
+  updateRevisionVisibility();
+  updateToggleSections();
+  // Restore milestone payment amounts
+  if (data.milestonePayments?.length) {
+    setTimeout(() => {
+      updateMilestonePayments();
+      const inputs = document.querySelectorAll('#milestone-payments-list input[type="number"]');
+      data.milestonePayments.forEach((mp, i) => {
+        if (inputs[i]) inputs[i].value = mp.amount || '';
+      });
+      checkMilestoneSum();
+    }, 100);
+  }
+}
+
+// ============ AUTO-SAVE ============
+function autoSave() {
+  try {
+    const data = getFormData();
+    localStorage.setItem('sa_autosave', JSON.stringify(data));
+  } catch (e) { /* silently fail */ }
+}
+
+function loadAutoSave() {
+  try {
+    const raw = localStorage.getItem('sa_autosave');
+    if (raw) {
+      const data = JSON.parse(raw);
+      setFormData(data);
+    }
+  } catch (e) { /* silently fail */ }
+}
+
+// ============ DRAFT ============
+function saveDraft() {
+  try {
+    const data = getFormData();
+    localStorage.setItem('sa_draft', JSON.stringify(data));
+    showToast('Draft saved successfully!', 'success');
+  } catch (e) {
+    showToast('Failed to save draft.', 'error');
+  }
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem('sa_draft');
+    if (!raw) { showToast('No draft found.', 'error'); return; }
+    const data = JSON.parse(raw);
+    setFormData(data);
+    showToast('Draft loaded successfully!', 'success');
+  } catch (e) {
+    showToast('Failed to load draft.', 'error');
+  }
+}
+
+function clearDraft() {
+  localStorage.removeItem('sa_draft');
+  localStorage.removeItem('sa_autosave');
+  document.getElementById('agreement-form').reset();
+  document.getElementById('milestones-list').innerHTML = '';
+  document.getElementById('clauses-list').innerHTML = '';
+  agreementNumber = generateAgreementNumber();
+  updatePaymentVisibility();
+  updateRevisionVisibility();
+  updateToggleSections();
+  showToast('Draft cleared.', 'success');
+}
+
+// ============ STEP NAVIGATION ============
+function goToStep(step) {
+  if (step < 0 || step >= totalSteps) return;
+
+  // Hide all steps
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.step-pill').forEach(p => p.classList.remove('active', 'completed'));
+
+  // Show target step
+  document.querySelector(`.form-step[data-step="${step}"]`).classList.add('active');
+
+  // Update pills
+  document.querySelectorAll('.step-pill').forEach(p => {
+    const s = parseInt(p.dataset.step);
+    if (s === step) p.classList.add('active');
+    else if (s < step) p.classList.add('completed');
+  });
+
+  currentStep = step;
+
+  // If preview step, generate preview
+  if (step === 6) generatePreview();
+
+  // If payment step, update milestone payments
+  if (step === 3) updateMilestonePayments();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() {
+  if (!validateStep(currentStep)) return;
+  goToStep(currentStep + 1);
+}
+
+function prevStep() {
+  goToStep(currentStep - 1);
+}
+
+// ============ VALIDATION ============
+function validateStep(step) {
+  const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+  if (!stepEl) return true;
+  let valid = true;
+
+  // Required text/email/date/number/textarea
+  stepEl.querySelectorAll('input[required], textarea[required], select[required]').forEach(el => {
+    const errMsg = el.parentElement.querySelector('.error-msg') || el.closest('.field-group')?.querySelector('.error-msg');
+    let fieldValid = true;
+
+    if (el.type === 'email') {
+      fieldValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+    } else if (el.type === 'number') {
+      fieldValid = el.value !== '' && parseFloat(el.value) >= 0;
+    } else {
+      fieldValid = el.value.trim() !== '';
+    }
+
+    if (!fieldValid) {
+      el.classList.add('invalid');
+      if (errMsg) errMsg.classList.add('visible');
+      valid = false;
+    } else {
+      el.classList.remove('invalid');
+      if (errMsg) errMsg.classList.remove('visible');
+    }
+  });
+
+  // Date validation for step 2
+  if (step === 2) {
+    const start = document.querySelector('[name="startDate"]');
+    const end = document.querySelector('[name="endDate"]');
+    if (start.value && end.value && end.value <= start.value) {
+      end.classList.add('invalid');
+      const errMsg = end.closest('.field-group')?.querySelector('.error-msg');
+      if (errMsg) errMsg.classList.add('visible');
+      valid = false;
+    }
+  }
+
+  // Custom payment validation
+  if (step === 3) {
+    const ps = document.querySelector('[name="paymentStructure"]:checked')?.value;
+    if (ps === 'custom') {
+      const cp = document.querySelector('[name="customPayment"]');
+      if (!cp.value.trim()) {
+        cp.classList.add('invalid');
+        const errMsg = cp.closest('.field-group')?.querySelector('.error-msg');
+        if (errMsg) errMsg.classList.add('visible');
+        valid = false;
+      }
+    }
+  }
+
+  if (!valid) showToast('Please fill in all required fields correctly.', 'error');
+  return valid;
+}
+
+// Auto-save debouncing
+let autoSaveTimer;
+function debouncedAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSave, 500);
+}
+
+// Real-time clear validation styling
+document.addEventListener('input', function(e) {
+  if (e.target.matches('input, textarea, select')) {
+    e.target.classList.remove('invalid');
+    const errMsg = e.target.parentElement.querySelector('.error-msg') || e.target.closest('.field-group')?.querySelector('.error-msg');
+    if (errMsg) errMsg.classList.remove('visible');
+    debouncedAutoSave();
+  }
+});
+
+document.addEventListener('change', function(e) {
+  debouncedAutoSave();
+  if (e.target.name === 'paymentStructure') updatePaymentVisibility();
+  if (e.target.name === 'revisionPolicy') updateRevisionVisibility();
+  if (e.target.name === 'confidentiality' || e.target.name === 'termination') updateToggleSections();
+});
+
+// ============ CONDITIONAL SECTIONS ============
+function updatePaymentVisibility() {
+  const val = document.querySelector('[name="paymentStructure"]:checked')?.value;
+  document.getElementById('milestone-payments-section').style.display = val === 'milestone' ? 'block' : 'none';
+  document.getElementById('custom-payment-section').style.display = val === 'custom' ? 'block' : 'none';
+  if (val === 'milestone') updateMilestonePayments();
+}
+
+function updateRevisionVisibility() {
+  const val = document.querySelector('[name="revisionPolicy"]')?.value;
+  document.getElementById('custom-revision-section').style.display = val === 'custom' ? 'block' : 'none';
+}
+
+function updateToggleSections() {
+  const confOn = document.querySelector('[name="confidentiality"]')?.checked;
+  document.getElementById('confidentiality-text-section').style.display = confOn ? 'block' : 'none';
+  const termOn = document.querySelector('[name="termination"]')?.checked;
+  document.getElementById('termination-text-section').style.display = termOn ? 'block' : 'none';
+}
+
+// ============ DYNAMIC MILESTONES ============
+function addMilestone(name, date) {
+  const list = document.getElementById('milestones-list');
+  const item = document.createElement('div');
+  item.className = 'dynamic-item';
+  item.innerHTML = `
+    <div class="field-inner">
+      <label>Milestone Name</label>
+      <input type="text" data-field="milestone-name" placeholder="e.g., Design Mockups" value="${esc(name || '')}">
+    </div>
+    <div class="field-inner">
+      <label>Due Date</label>
+      <input type="date" data-field="milestone-date" value="${esc(date || '')}">
+    </div>
+    <button type="button" class="btn-remove" onclick="removeDynamic(this)" title="Remove">×</button>
+  `;
+  list.appendChild(item);
+  autoSave();
+}
+
+function updateMilestonePayments() {
+  const list = document.getElementById('milestone-payments-list');
+  // Preserve existing values
+  const existing = {};
+  list.querySelectorAll('.mp-row input[type="number"]').forEach(inp => {
+    const idx = inp.dataset.mpIndex;
+    if (idx !== undefined) existing[idx] = inp.value;
+  });
+  list.innerHTML = '';
+  const milestones = [];
+  document.querySelectorAll('#milestones-list .dynamic-item').forEach(item => {
+    const name = item.querySelector('[data-field="milestone-name"]')?.value || 'Unnamed Milestone';
+    milestones.push(name);
+  });
+  if (milestones.length === 0) {
+    list.innerHTML = '<p style="color:var(--gray-light);font-size:13px;">Add milestones in the Timeline step first.</p>';
+    return;
+  }
+  milestones.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 'mp-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;';
+    row.innerHTML = `
+      <span class="mp-name" style="flex:1;font-size:14px;color:var(--gray-lighter);">${esc(name)}</span>
+      <input type="number" min="0" step="0.01" placeholder="Amount" style="width:160px;" data-mp-index="${i}" oninput="checkMilestoneSum()">
+    `;
+    const inp = row.querySelector('input[type="number"]');
+    if (existing[i] !== undefined) inp.value = existing[i];
+    list.appendChild(row);
+  });
+  checkMilestoneSum();
+}
+
+function checkMilestoneSum() {
+  const total = parseFloat(document.querySelector('[name="totalFee"]')?.value) || 0;
+  let sum = 0;
+  document.querySelectorAll('#milestone-payments-list input[type="number"]').forEach(inp => {
+    sum += parseFloat(inp.value) || 0;
+  });
+  const msgEl = document.getElementById('milestone-sum-msg');
+  const diff = total - sum;
+  if (Math.abs(diff) < 0.01) {
+    msgEl.style.color = '#4caf50';
+    msgEl.textContent = '✓ Milestone amounts match the total fee.';
+  } else {
+    msgEl.style.color = 'var(--orange)';
+    msgEl.textContent = `Remaining: ${formatCurrency(diff, document.querySelector('[name="currency"]')?.value || 'USD')} (Sum: ${formatCurrency(sum, document.querySelector('[name="currency"]')?.value || 'USD')} / Total: ${formatCurrency(total, document.querySelector('[name="currency"]')?.value || 'USD')})`;
+  }
+}
+
+// ============ DYNAMIC CLAUSES ============
+function addClause(title, body) {
+  const list = document.getElementById('clauses-list');
+  const item = document.createElement('div');
+  item.className = 'dynamic-item';
+  item.style.flexDirection = 'column';
+  item.innerHTML = `
+    <div style="display:flex;gap:12px;width:100%;align-items:flex-start;">
+      <div class="field-inner" style="flex:1;">
+        <label>Clause Title</label>
+        <input type="text" data-field="clause-title" placeholder="e.g., Non-Compete" value="${esc(title || '')}">
+      </div>
+      <button type="button" class="btn-remove" onclick="removeDynamic(this.closest('.dynamic-item'))" title="Remove" style="margin-top:22px;">×</button>
+    </div>
+    <div class="field-inner" style="width:100%;margin-top:8px;">
+      <label>Clause Body</label>
+      <textarea data-field="clause-body" rows="3" placeholder="Clause text...">${esc(body || '')}</textarea>
+    </div>
+  `;
+  list.appendChild(item);
+  autoSave();
+}
+
+function removeDynamic(el) {
+  const item = el.closest('.dynamic-item');
+  if (item) {
+    item.style.opacity = '0';
+    item.style.transform = 'translateY(-8px)';
+    item.style.transition = 'all 0.2s ease';
+    setTimeout(() => { item.remove(); autoSave(); }, 200);
+  }
+}
+
+// ============ GENERATE PREVIEW ============
+function generatePreview() {
+  if (!agreementNumber) agreementNumber = generateAgreementNumber();
+  const d = getFormData();
+  const today = formatDate(new Date().toISOString().split('T')[0]);
+  const currency = d.currency || 'USD';
+
+  // IP text
+  const ipTexts = {
+    full: 'Upon receipt of full payment, all intellectual property rights, including copyrights, trademarks, and any other proprietary rights in the deliverables, shall be transferred in full to the Client.',
+    licensed: 'The Service Provider grants the Client a non-exclusive, perpetual license to use the deliverables for the purposes outlined in this agreement. The Service Provider retains all intellectual property rights and ownership of the work.',
+    shared: 'Both parties shall share equal ownership of the intellectual property created under this agreement. Neither party may license or sell the work to third parties without written consent from the other party.'
+  };
+
+  // Revision text
+  let revisionText = '';
+  if (d.revisionPolicy === 'unlimited') revisionText = 'The Client is entitled to unlimited rounds of revisions within the project scope.';
+  else if (d.revisionPolicy === 'custom') revisionText = esc(d.customRevision) || 'As agreed upon by both parties.';
+  else revisionText = `The Client is entitled to ${esc(d.revisionPolicy)} round(s) of revisions within the project scope. Additional revisions beyond this limit may incur extra charges as agreed upon by both parties.`;
+
+  // Payment structure text
+  let paymentText = '';
+  if (d.paymentStructure === 'full') {
+    paymentText = `<p>The total project fee of <strong>${formatCurrency(d.totalFee, currency)}</strong> is due in full before the commencement of work.</p>`;
+  } else if (d.paymentStructure === '5050') {
+    const half = (parseFloat(d.totalFee) || 0) / 2;
+    paymentText = `<p>Payment shall be made in two equal installments:</p>
+      <table><thead><tr><th>Installment</th><th>Amount</th><th>Due</th></tr></thead><tbody>
+      <tr><td>First installment (upon signing)</td><td>${formatCurrency(half, currency)}</td><td>Upon agreement execution</td></tr>
+      <tr><td>Second installment (upon completion)</td><td>${formatCurrency(half, currency)}</td><td>Upon project completion</td></tr>
+      </tbody></table>`;
+  } else if (d.paymentStructure === 'milestone') {
+    let rows = '';
+    d.milestonePayments.forEach(mp => {
+      rows += `<tr><td>${esc(mp.name)}</td><td>${formatCurrency(mp.amount, currency)}</td></tr>`;
+    });
+    paymentText = `<p>Payment shall be made upon completion of each milestone as outlined below:</p>
+      <table><thead><tr><th>Milestone</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } else if (d.paymentStructure === 'custom') {
+    paymentText = `<p>${esc(d.customPayment)}</p>`;
+  }
+
+  // Milestones table
+  let milestonesHtml = '';
+  if (d.milestones.length > 0) {
+    let rows = d.milestones.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.name)}</td><td>${formatDate(m.date)}</td></tr>`).join('');
+    milestonesHtml = `<h3>Milestones</h3>
+      <table><thead><tr><th>#</th><th>Milestone</th><th>Due Date</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // Deliverables list
+  const deliverablesList = (d.deliverables || '').split('\n').filter(l => l.trim()).map(l => `<li>${esc(l.trim())}</li>`).join('');
+  const exclusionsList = (d.exclusions || '').split('\n').filter(l => l.trim()).map(l => `<li>${esc(l.trim())}</li>`).join('');
+
+  // Build terms
+  let clauseNum = 1;
+  let termsHtml = '';
+
+  // Revision
+  termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Revisions.</strong> ${revisionText}</p>`;
+  clauseNum++;
+
+  // IP
+  termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Intellectual Property.</strong> ${ipTexts[d.ipTransfer] || ipTexts.full}</p>`;
+  clauseNum++;
+
+  // Confidentiality
+  if (d.confidentiality) {
+    termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Confidentiality.</strong> ${esc(d.confidentialityText)}</p>`;
+    clauseNum++;
+  }
+
+  // Termination
+  if (d.termination) {
+    termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Termination.</strong> ${esc(d.terminationText)}</p>`;
+    clauseNum++;
+  }
+
+  // Late fee
+  if (d.lateFee) {
+    termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Late Payment.</strong> A late payment fee of ${esc(d.lateFee)}% per month shall be applied to any overdue invoices.</p>`;
+    clauseNum++;
+  }
+
+  // Cancellation
+  if (d.cancellationFee) {
+    termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Cancellation.</strong> In the event of project cancellation by the Client, a cancellation fee of ${esc(d.cancellationFee)}% of the total project fee shall be due.</p>`;
+    clauseNum++;
+  }
+
+  // Jurisdiction
+  if (d.jurisdiction) {
+    termsHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>Governing Law.</strong> This agreement shall be governed by and construed in accordance with the laws of ${esc(d.jurisdiction)}.</p>`;
+    clauseNum++;
+  }
+
+  // Additional clauses
+  let additionalHtml = '';
+  if (d.customClauses.length > 0) {
+    additionalHtml = '<h2>6. Additional Clauses</h2>';
+    d.customClauses.forEach(c => {
+      additionalHtml += `<p><span class="clause-num">${clauseNum}.</span> <strong>${esc(c.title)}.</strong> ${esc(c.body)}</p>`;
+      clauseNum++;
+    });
+  }
+
+  // Full document
+  const html = `
+    <h1>SERVICE AGREEMENT</h1>
+    <div class="doc-subtitle">Effective Date: ${today}</div>
+    <div class="doc-number">Agreement No. ${esc(agreementNumber)}</div>
+
+    <h2>1. Parties</h2>
+    <p>This Service Agreement ("Agreement") is entered into as of <strong>${formatDate(d.startDate)}</strong> by and between:</p>
+    <p><strong>Service Provider:</strong><br>
+    ${esc(d.freelancerName)}<br>
+    ${esc(d.freelancerEmail)}<br>
+    ${esc(d.freelancerAddress).replace(/\n/g, '<br>')}</p>
+    <p><strong>Client:</strong><br>
+    ${esc(d.clientName)}<br>
+    ${esc(d.clientEmail)}<br>
+    ${esc(d.clientAddress).replace(/\n/g, '<br>')}</p>
+
+    <h2>2. Scope of Work</h2>
+    <h3>Project: ${esc(d.projectTitle)}</h3>
+    <p>${esc(d.projectDescription).replace(/\n/g, '<br>')}</p>
+
+    <h3>Deliverables</h3>
+    <ul>${deliverablesList || '<li>As agreed upon by both parties.</li>'}</ul>
+
+    ${exclusionsList ? `<h3>Exclusions</h3><p>The following items are explicitly excluded from the scope of this agreement:</p><ul>${exclusionsList}</ul>` : ''}
+
+    <h2>3. Timeline</h2>
+    <p><strong>Start Date:</strong> ${formatDate(d.startDate)}<br>
+    <strong>End Date:</strong> ${formatDate(d.endDate)}</p>
+    ${milestonesHtml}
+
+    <h2>4. Payment Terms</h2>
+    <p><strong>Total Project Fee:</strong> ${formatCurrency(d.totalFee, currency)}</p>
+    ${paymentText}
+    ${d.paymentMethod ? `<p><strong>Payment Method:</strong> ${esc(d.paymentMethod)}</p>` : ''}
+
+    <h2>5. Terms & Conditions</h2>
+    ${termsHtml}
+
+    ${additionalHtml}
+
+    <h2>${d.customClauses.length > 0 ? '7' : '6'}. Agreement</h2>
+    <p>By signing below, both parties acknowledge that they have read, understood, and agree to be bound by the terms and conditions outlined in this Service Agreement.</p>
+
+    <div class="sig-block">
+      <div class="sig-col">
+        <div class="sig-line">Signature</div>
+        <div class="sig-name">${esc(d.freelancerName)}</div>
+        <div style="font-size:12px;color:#777;margin-top:2px;">Service Provider</div>
+        <div style="font-size:12px;color:#777;margin-top:8px;">Date: _______________</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-line">Signature</div>
+        <div class="sig-name">${esc(d.clientName)}</div>
+        <div style="font-size:12px;color:#777;margin-top:2px;">Client</div>
+        <div style="font-size:12px;color:#777;margin-top:8px;">Date: _______________</div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      ${esc(agreementNumber)} &nbsp;·&nbsp; Page 1 of 1 &nbsp;·&nbsp; Generated by Reshuffle Service Agreement Generator
+    </div>
+  `;
+
+  document.getElementById('agreement-preview').innerHTML = html;
+}
+
+// ============ DOWNLOAD PDF ============
+function downloadPDF() {
+  window.print();
+}
+
+// ============ STEP PILL CLICKS ============
+document.querySelectorAll('.step-pill').forEach(pill => {
+  pill.addEventListener('click', function() {
+    const target = parseInt(this.dataset.step);
+    // Only allow clicking completed steps or current+1 if validated
+    if (target < currentStep) {
+      goToStep(target);
+    } else if (target === currentStep + 1) {
+      nextStep();
+    } else if (target <= currentStep) {
+      goToStep(target);
+    }
+  });
+});
+
+// ============ INIT ============
+(function init() {
+  agreementNumber = generateAgreementNumber();
+  loadAutoSave();
+  updatePaymentVisibility();
+  updateRevisionVisibility();
+  updateToggleSections();
+})();
+</script>
+</body>
+</html>

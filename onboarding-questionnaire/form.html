@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Form</title>
+<link rel="icon" type="image/png" href="../5 (1).png">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --black: #000000;
+  --black-soft: #0A0A0A;
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --white: #FFFFFF;
+  --gray-dark: #111111;
+  --gray-medium: #1A1A1A;
+  --gray-light: #888888;
+  --gray-lighter: #CCCCCC;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column;
+}
+a { color: var(--orange); text-decoration: none; }
+a:hover { color: var(--orange-light); }
+
+/* Nav */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.nav-logo img { height: 32px; }
+.nav-logo span { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; }
+
+/* Container */
+.form-container {
+  flex: 1; display: flex; align-items: flex-start; justify-content: center;
+  padding: 40px 20px 60px;
+}
+.form-card {
+  width: 100%; max-width: 640px;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  padding: 40px;
+}
+@media (max-width: 600px) { .form-card { padding: 24px 20px; } }
+.form-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+.form-desc { color: var(--gray-lighter); font-size: 0.95rem; line-height: 1.6; margin-bottom: 32px; }
+
+/* Fields */
+.form-field { margin-bottom: 28px; }
+.form-field label {
+  display: block; font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 8px;
+}
+.required-star { color: var(--orange); margin-left: 2px; }
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="tel"],
+.form-field input[type="date"],
+.form-field input[type="file"],
+.form-field textarea,
+.form-field select {
+  width: 100%; padding: 12px 16px;
+  background: var(--gray-medium); color: var(--white);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 0.95rem;
+  transition: border-color var(--transition);
+  outline: none;
+}
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+  border-color: var(--orange);
+}
+.form-field textarea { resize: vertical; min-height: 100px; }
+.form-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.form-field input[type="file"] { color: var(--gray-light); }
+.form-field .field-error {
+  color: #ff453a; font-size: 0.8rem; margin-top: 6px; display: none;
+}
+.form-field.error input, .form-field.error textarea, .form-field.error select {
+  border-color: #ff453a;
+}
+.form-field.error .field-error { display: block; }
+
+.radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 12px; }
+.radio-group label, .checkbox-group label {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 400; color: var(--gray-lighter); cursor: pointer; font-size: 0.95rem;
+}
+.radio-group input, .checkbox-group input { accent-color: var(--orange); width: 18px; height: 18px; flex-shrink: 0; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 28px; border-radius: 50px; border: none;
+  font-family: var(--font); font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--gray-medium); color: var(--gray-lighter); border: 1px solid rgba(255,255,255,0.1); }
+.btn-secondary:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+
+.submit-row { margin-top: 36px; }
+.submit-row .btn { width: 100%; padding: 16px; font-size: 1.05rem; }
+
+/* Success */
+.success-state {
+  text-align: center; padding: 40px 20px;
+}
+.success-state .checkmark {
+  width: 72px; height: 72px; margin: 0 auto 20px;
+  background: rgba(255,107,53,0.12); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.success-state h2 { font-size: 1.4rem; margin-bottom: 8px; }
+.success-state p { color: var(--gray-lighter); font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5; }
+.success-btns { display: flex; flex-direction: column; gap: 12px; max-width: 340px; margin: 0 auto; }
+.success-btns .btn { width: 100%; }
+
+/* Error state */
+.error-state {
+  text-align: center; padding: 60px 20px;
+}
+.error-state h2 { font-size: 1.4rem; margin-bottom: 12px; }
+.error-state p { color: var(--gray-lighter); font-size: 0.95rem; line-height: 1.5; }
+
+/* Toast */
+.copy-toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--orange); color: var(--white); padding: 12px 28px;
+  border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 999;
+}
+.copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Powered by */
+.powered-by {
+  text-align: center; padding: 24px; color: var(--gray-light); font-size: 0.8rem;
+}
+.powered-by a { color: var(--gray-lighter); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <img src="../2 (1).png" alt="Reshuffle">
+    <span>Reshuffle</span>
+  </div>
+</nav>
+
+<div class="form-container">
+  <div class="form-card" id="formCard">
+    <div id="formContent"></div>
+  </div>
+</div>
+
+<div class="powered-by">Powered by <a href="../tools.html">Reshuffle Tools</a></div>
+
+<div class="copy-toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  const formCard = document.getElementById('formCard');
+  const formContent = document.getElementById('formContent');
+  let config = null;
+
+  // ── Decode config from URL hash ──
+  function decodeConfig() {
+    try {
+      const hash = window.location.hash.substring(1);
+      if (!hash) return null;
+      const json = decodeURIComponent(escape(atob(hash)));
+      const parsed = JSON.parse(json);
+      if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) return null;
+      // Sanitize
+      parsed.title = typeof parsed.title === 'string' ? parsed.title : '';
+      parsed.description = typeof parsed.description === 'string' ? parsed.description : '';
+      parsed.email = typeof parsed.email === 'string' ? parsed.email : '';
+      parsed.questions = parsed.questions.filter(q =>
+        q && typeof q.label === 'string' && typeof q.type === 'string'
+      ).map(q => ({
+        id: q.id || ('q_' + Math.random().toString(36).substr(2, 9)),
+        label: q.label,
+        type: q.type,
+        required: !!q.required,
+        options: Array.isArray(q.options) ? q.options.filter(o => o != null && o !== '').map(String) : []
+      }));
+      return parsed.questions.length > 0 ? parsed : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function escHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s || '';
+    return div.innerHTML;
+  }
+
+  function escAttr(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Render Error State ──
+  function renderError() {
+    formContent.innerHTML = `
+      <div class="error-state">
+        <h2>Invalid Form Link</h2>
+        <p>This form link appears to be invalid or corrupted.<br>Please ask the sender for a new link.</p>
+      </div>`;
+  }
+
+  // ── Render Form ──
+  function renderForm() {
+    let html = '';
+    if (config.title) html += `<h1 class="form-title">${escHtml(config.title)}</h1>`;
+    if (config.description) html += `<p class="form-desc">${escHtml(config.description)}</p>`;
+
+    config.questions.forEach((q, i) => {
+      const req = q.required ? '<span class="required-star">*</span>' : '';
+      html += `<div class="form-field" data-qid="${escAttr(q.id)}" data-type="${escAttr(q.type)}" data-required="${q.required}">`;
+      html += `<label>${escHtml(q.label)}${req}</label>`;
+
+      switch(q.type) {
+        case 'short_text':
+          html += `<input type="text" name="${escAttr(q.id)}" placeholder="Your answer">`;
+          break;
+        case 'long_text':
+          html += `<textarea name="${escAttr(q.id)}" placeholder="Your answer"></textarea>`;
+          break;
+        case 'email':
+          html += `<input type="email" name="${escAttr(q.id)}" placeholder="email@example.com">`;
+          break;
+        case 'phone':
+          html += `<input type="tel" name="${escAttr(q.id)}" placeholder="+1 (555) 000-0000">`;
+          break;
+        case 'date':
+          html += `<input type="date" name="${escAttr(q.id)}">`;
+          break;
+        case 'file_upload':
+          html += `<input type="file" name="${escAttr(q.id)}">`;
+          html += `<div style="color:var(--gray-light);font-size:0.8rem;margin-top:6px;">File name will be included in submission</div>`;
+          break;
+        case 'dropdown':
+          html += `<select name="${escAttr(q.id)}"><option value="">Select…</option>`;
+          (q.options || []).forEach(o => { html += `<option value="${escAttr(o)}">${escHtml(o)}</option>`; });
+          html += `</select>`;
+          break;
+        case 'multiple_choice':
+          html += `<div class="radio-group">`;
+          (q.options || []).forEach((o, j) => {
+            html += `<label><input type="radio" name="${escAttr(q.id)}" value="${escAttr(o)}"> ${escHtml(o)}</label>`;
+          });
+          html += `</div>`;
+          break;
+        case 'checkbox':
+          html += `<div class="checkbox-group">`;
+          (q.options || []).forEach((o, j) => {
+            html += `<label><input type="checkbox" name="${escAttr(q.id)}" value="${escAttr(o)}"> ${escHtml(o)}</label>`;
+          });
+          html += `</div>`;
+          break;
+        default:
+          html += `<input type="text" name="${escAttr(q.id)}" placeholder="Your answer">`;
+      }
+      html += `<div class="field-error">This field is required</div>`;
+      html += `</div>`;
+    });
+
+    html += `<div class="submit-row"><button class="btn btn-primary" id="submitBtn" type="button">Submit</button></div>`;
+    formContent.innerHTML = html;
+    document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+  }
+
+  // ── Collect answers ──
+  function collectAnswers() {
+    const answers = [];
+    let valid = true;
+
+    config.questions.forEach(q => {
+      const field = document.querySelector(`[data-qid="${CSS.escape(q.id)}"]`);
+      if (!field) return;
+      let value = '';
+
+      switch(q.type) {
+        case 'checkbox': {
+          const checked = field.querySelectorAll('input[type="checkbox"]:checked');
+          value = Array.from(checked).map(c => c.value).join(', ');
+          break;
+        }
+        case 'multiple_choice': {
+          const selected = field.querySelector('input[type="radio"]:checked');
+          value = selected ? selected.value : '';
+          break;
+        }
+        case 'file_upload': {
+          const fileInput = field.querySelector('input[type="file"]');
+          value = fileInput && fileInput.files.length > 0
+            ? Array.from(fileInput.files).map(f => f.name).join(', ')
+            : '';
+          break;
+        }
+        default: {
+          const input = field.querySelector('input, textarea, select');
+          value = input ? input.value.trim() : '';
+        }
+      }
+
+      // Validate required
+      field.classList.remove('error');
+      if (q.required && !value) {
+        field.classList.add('error');
+        valid = false;
+      }
+      // Validate email format
+      if (q.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        field.classList.add('error');
+        field.querySelector('.field-error').textContent = 'Please enter a valid email address';
+        valid = false;
+      }
+
+      answers.push({ label: q.label, value: value });
+    });
+
+    return { answers, valid };
+  }
+
+  // ── Submit ──
+  function handleSubmit() {
+    const { answers, valid } = collectAnswers();
+    if (!valid) {
+      // Scroll to first error
+      const firstError = document.querySelector('.form-field.error');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Format response text
+    const lines = [];
+    lines.push(`Form: ${config.title || 'Onboarding Questionnaire'}`);
+    lines.push('---');
+    answers.forEach(a => {
+      lines.push(`${a.label}`);
+      lines.push(`${a.value || '(no answer)'}`);
+      lines.push('');
+    });
+    const body = lines.join('\n');
+
+    // Show success state
+    formContent.innerHTML = `
+      <div class="success-state">
+        <div class="checkmark">
+          <svg width="36" height="36" fill="none" stroke="var(--orange)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h2>Thank you!</h2>
+        <p>Your responses have been recorded. Choose how to send them below.</p>
+        <div class="success-btns">
+          <button class="btn btn-primary" id="mailtoBtn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Send via Email
+          </button>
+          <button class="btn btn-secondary" id="copyBtn">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy to Clipboard
+          </button>
+        </div>
+      </div>`;
+
+    document.getElementById('mailtoBtn').addEventListener('click', () => {
+      const subject = encodeURIComponent(`Form Response: ${config.title || 'Onboarding Questionnaire'}`);
+      const mailBody = encodeURIComponent(body);
+      const email = config.email || '';
+      window.location.href = `mailto:${email}?subject=${subject}&body=${mailBody}`;
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(body).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = body;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied to clipboard!');
+      });
+    });
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── Init ──
+  config = decodeConfig();
+  if (!config) {
+    renderError();
+  } else {
+    document.title = (config.title || 'Onboarding Form') + ' — Reshuffle';
+    renderForm();
+  }
+})();
+</script>
+</body>
+</html>

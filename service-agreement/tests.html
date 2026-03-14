@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Agreement Generator — Tests</title>
+<link rel="icon" type="image/png" href="../5 (1).png">
+<style>
+:root {
+  --black: #000000;
+  --black-soft: #0A0A0A;
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --white: #FFFFFF;
+  --gray-dark: #111111;
+  --gray-medium: #1A1A1A;
+  --gray-light: #888888;
+  --gray-lighter: #CCCCCC;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  padding: 40px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+h1 span { color: var(--orange); }
+.subtitle { color: var(--gray-light); font-size: 14px; margin-bottom: 32px; }
+
+/* Controls */
+.controls {
+  display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; align-items: center;
+}
+.btn {
+  padding: 10px 24px; border-radius: 50px; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s ease;
+}
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-light); }
+.btn-secondary { background: transparent; color: var(--gray-lighter); border: 1px solid rgba(255,255,255,0.1); }
+.btn-secondary:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+
+/* Stats */
+.stats {
+  display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
+}
+.stat {
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 16px 24px;
+  min-width: 120px;
+  text-align: center;
+}
+.stat-value { font-size: 32px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--gray-light); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.stat-pass .stat-value { color: #4caf50; }
+.stat-fail .stat-value { color: #ff4444; }
+.stat-skip .stat-value { color: var(--gray-light); }
+.stat-total .stat-value { color: var(--orange); }
+
+/* Progress bar */
+.progress-bar {
+  height: 6px; background: var(--gray-dark); border-radius: 3px;
+  margin-bottom: 32px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px; transition: width 0.3s ease;
+  background: linear-gradient(90deg, #4caf50, var(--orange));
+  width: 0%;
+}
+
+/* Category */
+.category {
+  margin-bottom: 24px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.category-header {
+  background: var(--gray-dark);
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.category-header:hover { background: var(--gray-medium); }
+.category-title { font-size: 16px; font-weight: 600; }
+.category-count { font-size: 13px; color: var(--gray-light); }
+.category-body { padding: 0; }
+.category.collapsed .category-body { display: none; }
+
+/* Test result */
+.test-result {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+.test-result:hover { background: rgba(255,255,255,0.02); }
+.test-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.test-pass .test-icon { background: rgba(76,175,80,0.15); color: #4caf50; }
+.test-fail .test-icon { background: rgba(255,68,68,0.15); color: #ff4444; }
+.test-name { flex: 1; line-height: 22px; }
+.test-time { font-size: 12px; color: var(--gray-light); line-height: 22px; }
+.test-error {
+  margin-top: 6px; padding: 8px 12px;
+  background: rgba(255,68,68,0.08);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #ff8888;
+  font-family: 'SF Mono', Menlo, monospace;
+  word-break: break-all;
+}
+
+/* Hidden iframe */
+#test-frame {
+  position: absolute; left: -9999px; top: -9999px;
+  width: 1024px; height: 768px; border: none;
+}
+
+@media (max-width: 600px) {
+  body { padding: 20px; }
+  h1 { font-size: 24px; }
+  .stats { gap: 12px; }
+  .stat { padding: 12px 16px; min-width: 80px; }
+  .stat-value { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Service Agreement <span>Tests</span></h1>
+<p class="subtitle">Comprehensive test suite for the Service Agreement Generator</p>
+
+<div class="controls">
+  <button class="btn btn-primary" onclick="runAllTests()" id="btn-run">▶ Run All Tests</button>
+  <button class="btn btn-secondary" onclick="location.reload()">↻ Reset</button>
+  <a href="index.html" class="btn btn-secondary" style="text-decoration:none;">← Back to Generator</a>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat stat-total"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total</div></div>
+  <div class="stat stat-pass"><div class="stat-value" id="stat-pass">0</div><div class="stat-label">Passed</div></div>
+  <div class="stat stat-fail"><div class="stat-value" id="stat-fail">0</div><div class="stat-label">Failed</div></div>
+  <div class="stat"><div class="stat-value" id="stat-time">—</div><div class="stat-label">Time (ms)</div></div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+<div id="results"></div>
+
+<iframe id="test-frame" src="index.html"></iframe>
+
+<script>
+// ============================================
+// TEST FRAMEWORK
+// ============================================
+const results = [];
+let totalTests = 0, passedTests = 0, failedTests = 0;
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message || 'Assertion failed');
+}
+
+function assertEqual(actual, expected, message) {
+  if (actual !== expected) {
+    throw new Error((message || 'assertEqual') + ` — expected: ${JSON.stringify(expected)}, got: ${JSON.stringify(actual)}`);
+  }
+}
+
+function assertNotEqual(actual, notExpected, message) {
+  if (actual === notExpected) {
+    throw new Error((message || 'assertNotEqual') + ` — expected NOT: ${JSON.stringify(notExpected)}, but got it`);
+  }
+}
+
+function assertContains(str, substr, message) {
+  if (typeof str !== 'string' || !str.includes(substr)) {
+    throw new Error((message || 'assertContains') + ` — "${substr}" not found in string`);
+  }
+}
+
+function assertTrue(val, message) {
+  if (!val) throw new Error(message || 'Expected truthy value');
+}
+
+function assertFalse(val, message) {
+  if (val) throw new Error(message || 'Expected falsy value');
+}
+
+function assertGreaterThan(a, b, msg) {
+  if (!(a > b)) throw new Error((msg || '') + ` — expected ${a} > ${b}`);
+}
+
+// ============================================
+// HELPER: Access iframe
+// ============================================
+function getDoc() {
+  return document.getElementById('test-frame').contentDocument;
+}
+function getWin() {
+  return document.getElementById('test-frame').contentWindow;
+}
+
+function fillField(name, value) {
+  const el = getDoc().querySelector(`[name="${name}"]`);
+  if (!el) throw new Error(`Field [name="${name}"] not found`);
+  if (el.type === 'radio') {
+    const radio = getDoc().querySelector(`input[name="${name}"][value="${value}"]`);
+    if (!radio) throw new Error(`Radio [name="${name}"][value="${value}"] not found`);
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+  } else if (el.type === 'checkbox') {
+    el.checked = !!value;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  } else {
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+function clickButton(text) {
+  const buttons = getDoc().querySelectorAll('button');
+  for (const btn of buttons) {
+    if (btn.textContent.includes(text)) { btn.click(); return true; }
+  }
+  return false;
+}
+
+function fillAllRequired() {
+  fillField('freelancerName', 'Test Freelancer');
+  fillField('freelancerEmail', 'test@freelancer.com');
+  fillField('freelancerAddress', '123 Test St\nTest City, TS 12345');
+  fillField('clientName', 'Test Client Inc.');
+  fillField('clientEmail', 'client@test.com');
+  fillField('clientAddress', '456 Client Ave\nClient City, CL 67890');
+  fillField('projectTitle', 'Test Project Alpha');
+  fillField('projectDescription', 'A comprehensive test project description with multiple lines.\nLine 2 of description.');
+  fillField('deliverables', 'Deliverable 1\nDeliverable 2\nDeliverable 3');
+  fillField('exclusions', 'Not included item 1\nNot included item 2');
+  fillField('startDate', '2026-04-01');
+  fillField('endDate', '2026-06-30');
+  fillField('totalFee', '5000');
+  fillField('paymentStructure', 'full');
+  fillField('jurisdiction', 'State of California, United States');
+}
+
+function resetForm() {
+  const win = getWin();
+  // Clear localStorage
+  try {
+    win.localStorage.removeItem('sa_autosave');
+    win.localStorage.removeItem('sa_draft');
+  } catch(e) {}
+  // Reload iframe
+  return new Promise(resolve => {
+    const frame = document.getElementById('test-frame');
+    frame.onload = () => { setTimeout(resolve, 100); };
+    frame.src = 'index.html?' + Date.now();
+  });
+}
+
+// ============================================
+// TEST DEFINITIONS
+// ============================================
+const testCategories = [
+  {
+    name: 'Form Validation',
+    tests: [
+      {
+        name: 'Required field — empty freelancer name blocks Next',
+        fn: async () => {
+          await resetForm();
+          // Try next without filling anything
+          getWin().nextStep();
+          const step = getWin().currentStep;
+          assertEqual(step, 0, 'Should stay on step 0');
+          const nameInput = getDoc().querySelector('[name="freelancerName"]');
+          assertTrue(nameInput.classList.contains('invalid'), 'Name should be marked invalid');
+        }
+      },
+      {
+        name: 'Required field — valid email format enforced',
+        fn: async () => {
+          await resetForm();
+          fillField('freelancerName', 'Test');
+          fillField('freelancerEmail', 'not-an-email');
+          fillField('freelancerAddress', '123 Test');
+          fillField('clientName', 'Client');
+          fillField('clientEmail', 'client@test.com');
+          fillField('clientAddress', '456 Test');
+          getWin().nextStep();
+          assertEqual(getWin().currentStep, 0, 'Should stay on step 0 with invalid email');
+          const emailInput = getDoc().querySelector('[name="freelancerEmail"]');
+          assertTrue(emailInput.classList.contains('invalid'), 'Email should be marked invalid');
+        }
+      },
+      {
+        name: 'Valid email passes validation',
+        fn: async () => {
+          await resetForm();
+          fillField('freelancerName', 'Test');
+          fillField('freelancerEmail', 'valid@email.com');
+          fillField('freelancerAddress', '123 Test');
+          fillField('clientName', 'Client');
+          fillField('clientEmail', 'client@test.com');
+          fillField('clientAddress', '456 Test');
+          getWin().nextStep();
+          assertEqual(getWin().currentStep, 1, 'Should advance to step 1');
+        }
+      },
+      {
+        name: 'End date must be after start date',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          // Go to step 0 -> 1 -> 2
+          getWin().goToStep(0);
+          getWin().nextStep(); // 0->1
+          getWin().nextStep(); // 1->2
+          // Now set invalid dates
+          fillField('startDate', '2026-06-01');
+          fillField('endDate', '2026-05-01');
+          getWin().nextStep(); // should fail
+          assertEqual(getWin().currentStep, 2, 'Should stay on step 2 due to date error');
+        }
+      },
+      {
+        name: 'Numeric fields accept valid numbers',
+        fn: async () => {
+          await resetForm();
+          fillField('totalFee', '1000.50');
+          const el = getDoc().querySelector('[name="totalFee"]');
+          assertEqual(el.value, '1000.50', 'Should accept decimal numbers');
+        }
+      },
+      {
+        name: 'Empty required textarea blocks progression',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('projectDescription', '');
+          getWin().goToStep(1);
+          getWin().nextStep();
+          assertEqual(getWin().currentStep, 1, 'Should stay on step 1');
+        }
+      },
+      {
+        name: 'All required fields filled allows full progression',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().goToStep(0);
+          for (let i = 0; i < 6; i++) getWin().nextStep();
+          assertEqual(getWin().currentStep, 6, 'Should reach preview step');
+        }
+      }
+    ]
+  },
+  {
+    name: 'Dynamic Fields',
+    tests: [
+      {
+        name: 'Add milestone creates a new row',
+        fn: async () => {
+          await resetForm();
+          const before = getDoc().querySelectorAll('#milestones-list .dynamic-item').length;
+          getWin().addMilestone('Test Milestone', '2026-05-01');
+          const after = getDoc().querySelectorAll('#milestones-list .dynamic-item').length;
+          assertEqual(after, before + 1, 'Should have one more milestone');
+        }
+      },
+      {
+        name: 'Add multiple milestones',
+        fn: async () => {
+          await resetForm();
+          getWin().addMilestone('M1', '2026-04-15');
+          getWin().addMilestone('M2', '2026-05-15');
+          getWin().addMilestone('M3', '2026-06-15');
+          const count = getDoc().querySelectorAll('#milestones-list .dynamic-item').length;
+          assertEqual(count, 3, 'Should have 3 milestones');
+        }
+      },
+      {
+        name: 'Remove milestone removes the row',
+        fn: async () => {
+          await resetForm();
+          getWin().addMilestone('M1', '2026-04-15');
+          getWin().addMilestone('M2', '2026-05-15');
+          assertEqual(getDoc().querySelectorAll('#milestones-list .dynamic-item').length, 2);
+          // Remove first
+          const removeBtn = getDoc().querySelector('#milestones-list .btn-remove');
+          removeBtn.click();
+          // Wait for animation
+          await new Promise(r => setTimeout(r, 300));
+          assertEqual(getDoc().querySelectorAll('#milestones-list .dynamic-item').length, 1, 'Should have 1 milestone after removal');
+        }
+      },
+      {
+        name: 'Add custom clause creates entry',
+        fn: async () => {
+          await resetForm();
+          getWin().addClause('Non-Compete', 'Neither party shall compete...');
+          const count = getDoc().querySelectorAll('#clauses-list .dynamic-item').length;
+          assertEqual(count, 1, 'Should have 1 custom clause');
+        }
+      },
+      {
+        name: 'Add multiple custom clauses',
+        fn: async () => {
+          await resetForm();
+          getWin().addClause('Clause A', 'Body A');
+          getWin().addClause('Clause B', 'Body B');
+          getWin().addClause('Clause C', 'Body C');
+          assertEqual(getDoc().querySelectorAll('#clauses-list .dynamic-item').length, 3);
+        }
+      },
+      {
+        name: 'Milestone payment rows match milestones',
+        fn: async () => {
+          await resetForm();
+          getWin().addMilestone('M1', '2026-04-15');
+          getWin().addMilestone('M2', '2026-05-15');
+          fillField('paymentStructure', 'milestone');
+          getWin().updateMilestonePayments();
+          const rows = getDoc().querySelectorAll('#milestone-payments-list .mp-row').length;
+          assertEqual(rows, 2, 'Should have 2 payment rows for 2 milestones');
+        }
+      },
+      {
+        name: 'Milestone payment sum validation shows status',
+        fn: async () => {
+          await resetForm();
+          fillField('totalFee', '1000');
+          getWin().addMilestone('M1', '2026-04-15');
+          getWin().addMilestone('M2', '2026-05-15');
+          fillField('paymentStructure', 'milestone');
+          getWin().updateMilestonePayments();
+          const inputs = getDoc().querySelectorAll('#milestone-payments-list input[type="number"]');
+          inputs[0].value = '500';
+          inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+          inputs[1].value = '500';
+          inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+          getWin().checkMilestoneSum();
+          const msg = getDoc().getElementById('milestone-sum-msg').textContent;
+          assertContains(msg, 'match', 'Should indicate amounts match');
+        }
+      }
+    ]
+  },
+  {
+    name: 'Document Generation',
+    tests: [
+      {
+        name: 'Preview renders all main sections',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'SERVICE AGREEMENT', 'Has title');
+          assertContains(preview, 'Scope of Work', 'Has scope');
+          assertContains(preview, 'Timeline', 'Has timeline');
+          assertContains(preview, 'Payment Terms', 'Has payment');
+          assertContains(preview, 'Terms &amp; Conditions', 'Has terms');
+        }
+      },
+      {
+        name: 'Preview includes freelancer and client details',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Test Freelancer', 'Has freelancer name');
+          assertContains(preview, 'Test Client Inc.', 'Has client name');
+          assertContains(preview, 'test@freelancer.com', 'Has freelancer email');
+          assertContains(preview, 'client@test.com', 'Has client email');
+        }
+      },
+      {
+        name: 'Preview includes project title and description',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Test Project Alpha', 'Has project title');
+          assertContains(preview, 'comprehensive test project', 'Has description');
+        }
+      },
+      {
+        name: 'Confidentiality clause toggled off omits section',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('confidentiality', false);
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertFalse(preview.includes('Confidentiality.'), 'Should not include conf clause when toggled off');
+        }
+      },
+      {
+        name: 'Confidentiality clause toggled on includes section',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('confidentiality', true);
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Confidentiality.', 'Should include conf clause');
+        }
+      },
+      {
+        name: 'Termination clause toggled off omits section',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('termination', false);
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertFalse(preview.includes('Termination.'), 'Should not include termination clause');
+        }
+      },
+      {
+        name: 'Milestone table renders when milestones exist',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().addMilestone('Design Phase', '2026-04-15');
+          getWin().addMilestone('Development Phase', '2026-05-30');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Design Phase', 'Has milestone name');
+          assertContains(preview, 'Development Phase', 'Has second milestone');
+        }
+      },
+      {
+        name: 'Exclusions render when provided',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('exclusions', 'Server maintenance\nHosting costs');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Exclusions', 'Has exclusions section');
+          assertContains(preview, 'Server maintenance', 'Has exclusion item');
+        }
+      },
+      {
+        name: 'Agreement number is rendered',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assert(preview.match(/SA-\d{4}-\d{4}/), 'Should contain agreement number');
+        }
+      },
+      {
+        name: 'Signature blocks render for both parties',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().generatePreview();
+          const sigBlocks = getDoc().querySelectorAll('#agreement-preview .sig-col');
+          assertEqual(sigBlocks.length, 2, 'Should have 2 signature columns');
+        }
+      },
+      {
+        name: '50/50 payment shows two installments',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('totalFee', '4000');
+          fillField('paymentStructure', '5050');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '2,000.00', 'Should show half amount');
+        }
+      },
+      {
+        name: 'Custom clauses appear in preview',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().addClause('Force Majeure', 'Neither party shall be liable for delays...');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Force Majeure', 'Has custom clause title');
+          assertContains(preview, 'Neither party shall be liable', 'Has custom clause body');
+        }
+      }
+    ]
+  },
+  {
+    name: 'Data Persistence',
+    tests: [
+      {
+        name: 'Save draft stores data in localStorage',
+        fn: async () => {
+          await resetForm();
+          fillField('freelancerName', 'Draft Saver');
+          fillField('projectTitle', 'Draft Project');
+          getWin().saveDraft();
+          const raw = getWin().localStorage.getItem('sa_draft');
+          assertTrue(!!raw, 'Draft should exist in localStorage');
+          const data = JSON.parse(raw);
+          assertEqual(data.freelancerName, 'Draft Saver');
+          assertEqual(data.projectTitle, 'Draft Project');
+        }
+      },
+      {
+        name: 'Load draft restores form data',
+        fn: async () => {
+          await resetForm();
+          fillField('freelancerName', 'Saved Person');
+          fillField('clientName', 'Saved Client');
+          getWin().saveDraft();
+          // Reset form values
+          fillField('freelancerName', '');
+          fillField('clientName', '');
+          // Load draft
+          getWin().loadDraft();
+          const name = getDoc().querySelector('[name="freelancerName"]').value;
+          const client = getDoc().querySelector('[name="clientName"]').value;
+          assertEqual(name, 'Saved Person', 'Freelancer name should be restored');
+          assertEqual(client, 'Saved Client', 'Client name should be restored');
+        }
+      },
+      {
+        name: 'Auto-save triggers on input',
+        fn: async () => {
+          await resetForm();
+          getWin().localStorage.removeItem('sa_autosave');
+          fillField('freelancerName', 'Auto Saved');
+          // Wait a tick for the event handler
+          await new Promise(r => setTimeout(r, 50));
+          const raw = getWin().localStorage.getItem('sa_autosave');
+          assertTrue(!!raw, 'Auto-save should create localStorage entry');
+          const data = JSON.parse(raw);
+          assertEqual(data.freelancerName, 'Auto Saved', 'Auto-saved data should match');
+        }
+      },
+      {
+        name: 'Clear draft removes from localStorage',
+        fn: async () => {
+          await resetForm();
+          fillField('freelancerName', 'To Delete');
+          getWin().saveDraft();
+          assertTrue(!!getWin().localStorage.getItem('sa_draft'), 'Draft should exist');
+          getWin().clearDraft();
+          assertFalse(!!getWin().localStorage.getItem('sa_draft'), 'Draft should be cleared');
+          assertFalse(!!getWin().localStorage.getItem('sa_autosave'), 'Auto-save should be cleared');
+        }
+      },
+      {
+        name: 'Milestones persist in draft',
+        fn: async () => {
+          await resetForm();
+          getWin().addMilestone('Persist M1', '2026-04-15');
+          getWin().addMilestone('Persist M2', '2026-05-15');
+          getWin().saveDraft();
+          const data = JSON.parse(getWin().localStorage.getItem('sa_draft'));
+          assertEqual(data.milestones.length, 2, 'Should save 2 milestones');
+          assertEqual(data.milestones[0].name, 'Persist M1');
+        }
+      },
+      {
+        name: 'Custom clauses persist in draft',
+        fn: async () => {
+          await resetForm();
+          getWin().addClause('Saved Clause', 'Saved body text');
+          getWin().saveDraft();
+          const data = JSON.parse(getWin().localStorage.getItem('sa_draft'));
+          assertEqual(data.customClauses.length, 1);
+          assertEqual(data.customClauses[0].title, 'Saved Clause');
+        }
+      }
+    ]
+  },
+  {
+    name: 'Edge Cases',
+    tests: [
+      {
+        name: 'Very long text in fields does not break form',
+        fn: async () => {
+          await resetForm();
+          const longText = 'A'.repeat(5000);
+          fillField('projectDescription', longText);
+          const val = getDoc().querySelector('[name="projectDescription"]').value;
+          assertEqual(val.length, 5000, 'Should accept 5000 chars');
+        }
+      },
+      {
+        name: 'Special characters are escaped in preview (XSS prevention)',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('freelancerName', '<script>alert("xss")</script>');
+          fillField('projectTitle', '"><img src=x onerror=alert(1)>');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertFalse(preview.includes('<script>alert'), 'Script tags should be escaped');
+          assertFalse(preview.includes('onerror=alert'), 'Event handlers should be escaped');
+          assertContains(preview, '&lt;script&gt;', 'Should contain escaped script tag');
+        }
+      },
+      {
+        name: 'Empty optional fields do not break preview',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('exclusions', '');
+          fillField('jurisdiction', '');
+          fillField('lateFee', '');
+          fillField('paymentMethod', '');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview');
+          assertTrue(preview.innerHTML.length > 100, 'Preview should render without errors');
+        }
+      },
+      {
+        name: 'Currency formatting works for all currencies',
+        fn: async () => {
+          const win = getWin();
+          assertEqual(win.formatCurrency(1000, 'USD'), '$1,000.00');
+          assertEqual(win.formatCurrency(1000, 'EUR'), '€1,000.00');
+          assertEqual(win.formatCurrency(1000, 'GBP'), '£1,000.00');
+          assertEqual(win.formatCurrency(1000, 'INR'), '₹1,000.00');
+        }
+      },
+      {
+        name: 'Format currency handles zero amount',
+        fn: async () => {
+          const result = getWin().formatCurrency(0, 'USD');
+          assertEqual(result, '$0.00', 'Zero should format as $0.00');
+        }
+      },
+      {
+        name: 'Format currency handles NaN/invalid input',
+        fn: async () => {
+          const result = getWin().formatCurrency('abc', 'USD');
+          assertEqual(result, '$0.00', 'Invalid input should default to $0.00');
+        }
+      },
+      {
+        name: 'Agreement number format is valid',
+        fn: async () => {
+          const num = getWin().generateAgreementNumber();
+          assertTrue(/^SA-\d{4}-\d{4}$/.test(num), 'Should match SA-YYYY-NNNN pattern');
+          const year = num.split('-')[1];
+          assertEqual(year, String(new Date().getFullYear()), 'Year should be current year');
+        }
+      },
+      {
+        name: 'Escape function prevents HTML injection',
+        fn: async () => {
+          const escaped = getWin().esc('<div class="test">Hello & "world"</div>');
+          assertFalse(escaped.includes('<div'), 'Should escape HTML tags');
+          assertContains(escaped, '&amp;', 'Should escape ampersand');
+          assertContains(escaped, '&lt;div', 'Should escape angle brackets');
+        }
+      },
+      {
+        name: 'Date formatting produces readable dates',
+        fn: async () => {
+          const formatted = getWin().formatDate('2026-04-01');
+          assertContains(formatted, 'April', 'Should contain month name');
+          assertContains(formatted, '2026', 'Should contain year');
+        }
+      },
+      {
+        name: 'Negative amount in total fee is still formatted',
+        fn: async () => {
+          await resetForm();
+          fillField('totalFee', '-500');
+          const val = getDoc().querySelector('[name="totalFee"]').value;
+          assertEqual(val, '-500', 'Should accept the input value');
+          // But validation should catch it (required + min=0)
+          // formatCurrency should handle it
+          const fmt = getWin().formatCurrency(-500, 'USD');
+          assertTrue(fmt.includes('-'), 'Negative should be visible in formatted output');
+        }
+      },
+      {
+        name: 'Empty date returns dash',
+        fn: async () => {
+          const result = getWin().formatDate('');
+          assertEqual(result, '—', 'Empty date should return dash');
+        }
+      }
+    ]
+  },
+  {
+    name: 'Payment Logic',
+    tests: [
+      {
+        name: 'Full upfront shows total amount',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('totalFee', '3000');
+          fillField('paymentStructure', 'full');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '3,000.00', 'Should show formatted total');
+          assertContains(preview, 'full before the commencement', 'Full upfront language');
+        }
+      },
+      {
+        name: '50/50 splits amount correctly',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('totalFee', '6000');
+          fillField('paymentStructure', '5050');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '3,000.00', 'Should show half amount');
+        }
+      },
+      {
+        name: 'Milestone-based payment renders table',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().addMilestone('Phase 1', '2026-04-15');
+          getWin().addMilestone('Phase 2', '2026-05-15');
+          fillField('totalFee', '2000');
+          fillField('paymentStructure', 'milestone');
+          getWin().updateMilestonePayments();
+          // Fill milestone payments
+          const inputs = getDoc().querySelectorAll('#milestone-payments-list input[type="number"]');
+          if (inputs.length >= 2) {
+            inputs[0].value = '1000';
+            inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+            inputs[1].value = '1000';
+            inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, 'Phase 1', 'Table should include milestone name');
+          assertContains(preview, '1,000.00', 'Table should show amount');
+        }
+      },
+      {
+        name: 'Custom payment displays text',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('paymentStructure', 'custom');
+          fillField('customPayment', 'Pay 30% upfront, 40% midway, 30% on completion.');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '30% upfront', 'Custom payment text should render');
+        }
+      },
+      {
+        name: 'Late payment fee renders when set',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('lateFee', '1.5');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '1.5%', 'Late fee percentage');
+          assertContains(preview, 'Late Payment', 'Late payment clause');
+        }
+      },
+      {
+        name: 'Cancellation fee renders when set',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('cancellationFee', '25');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '25%', 'Cancellation fee');
+          assertContains(preview, 'Cancellation', 'Cancellation clause');
+        }
+      },
+      {
+        name: 'Currency selector changes symbol',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('currency', 'EUR');
+          fillField('totalFee', '1500');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '€', 'Should show Euro symbol');
+        }
+      },
+      {
+        name: 'GBP currency shows pound symbol',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          fillField('currency', 'GBP');
+          fillField('totalFee', '2500');
+          getWin().generatePreview();
+          const preview = getDoc().getElementById('agreement-preview').innerHTML;
+          assertContains(preview, '£', 'Should show Pound symbol');
+        }
+      }
+    ]
+  },
+  {
+    name: 'UI Interactions',
+    tests: [
+      {
+        name: 'Step pills update on navigation',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().goToStep(0);
+          getWin().nextStep();
+          const pills = getDoc().querySelectorAll('.step-pill');
+          assertTrue(pills[0].classList.contains('completed'), 'Step 0 pill should be completed');
+          assertTrue(pills[1].classList.contains('active'), 'Step 1 pill should be active');
+        }
+      },
+      {
+        name: 'Back button returns to previous step',
+        fn: async () => {
+          await resetForm();
+          fillAllRequired();
+          getWin().goToStep(0);
+          getWin().nextStep();
+          assertEqual(getWin().currentStep, 1);
+          getWin().prevStep();
+          assertEqual(getWin().currentStep, 0, 'Should go back to step 0');
+        }
+      },
+      {
+        name: 'Payment structure radio toggles sections',
+        fn: async () => {
+          await resetForm();
+          fillField('paymentStructure', 'milestone');
+          const milestoneSection = getDoc().getElementById('milestone-payments-section');
+          assertNotEqual(milestoneSection.style.display, 'none', 'Milestone section should be visible');
+          fillField('paymentStructure', 'custom');
+          const customSection = getDoc().getElementById('custom-payment-section');
+          assertNotEqual(customSection.style.display, 'none', 'Custom section should be visible');
+          assertEqual(milestoneSection.style.display, 'none', 'Milestone section should be hidden');
+        }
+      },
+      {
+        name: 'Revision dropdown shows custom textarea',
+        fn: async () => {
+          await resetForm();
+          fillField('revisionPolicy', 'custom');
+          const section = getDoc().getElementById('custom-revision-section');
+          assertNotEqual(section.style.display, 'none', 'Custom revision should be visible');
+          fillField('revisionPolicy', '2');
+          assertEqual(section.style.display, 'none', 'Custom revision should be hidden');
+        }
+      },
+      {
+        name: 'Toggle switch shows/hides confidentiality text',
+        fn: async () => {
+          await resetForm();
+          fillField('confidentiality', false);
+          const section = getDoc().getElementById('confidentiality-text-section');
+          assertEqual(section.style.display, 'none', 'Should be hidden when off');
+          fillField('confidentiality', true);
+          assertNotEqual(section.style.display, 'none', 'Should be visible when on');
+        }
+      },
+      {
+        name: 'Toggle switch shows/hides termination text',
+        fn: async () => {
+          await resetForm();
+          fillField('termination', false);
+          const section = getDoc().getElementById('termination-text-section');
+          assertEqual(section.style.display, 'none', 'Should be hidden when off');
+          fillField('termination', true);
+          assertNotEqual(section.style.display, 'none', 'Should be visible when on');
+        }
+      },
+      {
+        name: 'Validation clears on input',
+        fn: async () => {
+          await resetForm();
+          getWin().nextStep(); // fail
+          const nameInput = getDoc().querySelector('[name="freelancerName"]');
+          assertTrue(nameInput.classList.contains('invalid'), 'Should be invalid');
+          fillField('freelancerName', 'Fixed');
+          assertFalse(nameInput.classList.contains('invalid'), 'Should clear invalid on input');
+        }
+      },
+      {
+        name: 'Toast notification appears',
+        fn: async () => {
+          await resetForm();
+          getWin().showToast('Test toast', 'success');
+          const toast = getDoc().getElementById('toast');
+          assertTrue(toast.classList.contains('show'), 'Toast should be visible');
+          assertContains(toast.textContent, 'Test toast', 'Toast should have correct text');
+        }
+      }
+    ]
+  }
+];
+
+// ============================================
+// TEST RUNNER
+// ============================================
+async function runAllTests() {
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running...';
+
+  totalTests = 0; passedTests = 0; failedTests = 0;
+  results.length = 0;
+
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  const startTime = performance.now();
+
+  // Count total tests
+  let total = 0;
+  testCategories.forEach(cat => total += cat.tests.length);
+
+  for (const category of testCategories) {
+    const catResults = [];
+
+    for (const test of category.tests) {
+      totalTests++;
+      const t0 = performance.now();
+      let passed = false;
+      let error = null;
+
+      try {
+        await test.fn();
+        passed = true;
+        passedTests++;
+      } catch (e) {
+        error = e.message || String(e);
+        failedTests++;
+      }
+
+      const elapsed = Math.round(performance.now() - t0);
+      catResults.push({ name: test.name, passed, error, time: elapsed });
+
+      // Update stats
+      updateStats(totalTests, passedTests, failedTests, total);
+    }
+
+    results.push({ name: category.name, results: catResults });
+  }
+
+  const totalTime = Math.round(performance.now() - startTime);
+  document.getElementById('stat-time').textContent = totalTime;
+
+  renderResults();
+
+  btn.disabled = false;
+  btn.textContent = '▶ Run All Tests';
+}
+
+function updateStats(total, passed, failed, maxTotal) {
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pass').textContent = passed;
+  document.getElementById('stat-fail').textContent = failed;
+  const pct = maxTotal > 0 ? (total / maxTotal * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function renderResults() {
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  for (const cat of results) {
+    const passed = cat.results.filter(r => r.passed).length;
+    const total = cat.results.length;
+    const allPassed = passed === total;
+
+    const catEl = document.createElement('div');
+    catEl.className = 'category' + (allPassed ? ' collapsed' : '');
+
+    let testsHtml = '';
+    for (const r of cat.results) {
+      testsHtml += `
+        <div class="test-result ${r.passed ? 'test-pass' : 'test-fail'}">
+          <div class="test-icon">${r.passed ? '✓' : '✗'}</div>
+          <div class="test-name">
+            ${escHtml(r.name)}
+            ${r.error ? `<div class="test-error">${escHtml(r.error)}</div>` : ''}
+          </div>
+          <div class="test-time">${r.time}ms</div>
+        </div>
+      `;
+    }
+
+    catEl.innerHTML = `
+      <div class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="category-title">${allPassed ? '✅' : '❌'} ${escHtml(cat.name)}</div>
+        <div class="category-count">${passed}/${total} passed</div>
+      </div>
+      <div class="category-body">${testsHtml}</div>
+    `;
+
+    container.appendChild(catEl);
+  }
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

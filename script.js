@@ -72,7 +72,7 @@ const observer = new IntersectionObserver((entries) => {
 }, observerOptions);
 
 // Observe elements
-document.querySelectorAll('.about-grid, .work-card, .connect-wrapper, .feature-item, .social-link').forEach((el, index) => {
+document.querySelectorAll('.about-grid, .work-card, .waitlist-wrapper, .connect-wrapper, .feature-item, .social-link').forEach((el, index) => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(30px)';
     el.style.transition = `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s`;
@@ -208,6 +208,29 @@ const sectionObserver = new IntersectionObserver((entries) => {
 sections.forEach(section => {
     sectionObserver.observe(section);
 });
+
+// ===== ANDROID WAITLIST =====
+const waitlistForm = document.getElementById('waitlistForm');
+const waitlistSuccess = document.getElementById('waitlistSuccess');
+
+if (waitlistForm) {
+    waitlistForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('waitlistEmail').value.trim();
+        if (!email) return;
+
+        // Store email in localStorage
+        const emails = JSON.parse(localStorage.getItem('waitlistEmails') || '[]');
+        if (!emails.includes(email)) {
+            emails.push(email);
+            localStorage.setItem('waitlistEmails', JSON.stringify(emails));
+        }
+
+        // Show success message and hide form
+        waitlistForm.style.display = 'none';
+        waitlistSuccess.classList.add('show');
+    });
+}
 
 // ===== PAGE LOAD =====
 window.addEventListener('load', () => {

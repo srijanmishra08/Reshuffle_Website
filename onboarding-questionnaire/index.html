@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Questionnaire Creator — Reshuffle</title>
+<link rel="icon" type="image/png" href="../5 (1).png">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --black: #000000;
+  --black-soft: #0A0A0A;
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --white: #FFFFFF;
+  --gray-dark: #111111;
+  --gray-medium: #1A1A1A;
+  --gray-light: #888888;
+  --gray-lighter: #CCCCCC;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--orange); text-decoration: none; }
+a:hover { color: var(--orange-light); }
+
+/* ── Nav ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.nav-logo img { height: 32px; }
+.nav-logo span { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; }
+.nav-links { display: flex; align-items: center; gap: 24px; }
+.nav-links a { color: var(--gray-lighter); font-size: 0.9rem; font-weight: 500; transition: color var(--transition); }
+.nav-links a:hover { color: var(--white); }
+
+/* ── Action Bar ── */
+.action-bar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding: 16px 32px;
+  background: var(--black-soft);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.action-bar h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+.action-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 50px; border: none;
+  font-family: var(--font); font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
+.btn-secondary { background: var(--gray-medium); color: var(--gray-lighter); border: 1px solid rgba(255,255,255,0.1); }
+.btn-secondary:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+.btn-danger { background: rgba(255,59,48,0.15); color: #ff453a; }
+.btn-danger:hover { background: rgba(255,59,48,0.25); }
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+.btn-icon { width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+/* ── Layout ── */
+.builder {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 130px);
+}
+@media (max-width: 860px) {
+  .builder { grid-template-columns: 1fr; }
+  .sidebar { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); max-height: 50vh; }
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--black-soft);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-header {
+  padding: 20px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-header h2 { font-size: 0.95rem; font-weight: 600; color: var(--gray-lighter); }
+.question-list { flex: 1; overflow-y: auto; padding: 8px; }
+.question-list::-webkit-scrollbar { width: 4px; }
+.question-list::-webkit-scrollbar-thumb { background: var(--gray-light); border-radius: 4px; }
+
+/* ── Question Item ── */
+.q-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; margin-bottom: 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: all var(--transition);
+  border: 1px solid transparent;
+  user-select: none;
+}
+.q-item:hover { background: rgba(255,255,255,0.04); }
+.q-item.active { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.3); }
+.q-item.dragging { opacity: 0.5; background: rgba(255,107,53,0.12); }
+.q-item .drag-handle {
+  cursor: grab; color: var(--gray-light); flex-shrink: 0; font-size: 1.1rem; line-height: 1;
+  touch-action: none;
+}
+.q-item .drag-handle:active { cursor: grabbing; }
+.q-item .q-label { flex: 1; font-size: 0.85rem; color: var(--gray-lighter); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-item .q-toggle {
+  position: relative; width: 38px; height: 22px; flex-shrink: 0;
+  background: rgba(255,255,255,0.1); border-radius: 50px; cursor: pointer;
+  transition: background var(--transition); border: none;
+}
+.q-item .q-toggle.on { background: var(--orange); }
+.q-item .q-toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; background: var(--white);
+  border-radius: 50%; transition: transform var(--transition);
+}
+.q-item .q-toggle.on::after { transform: translateX(16px); }
+.q-num { font-size: 0.75rem; color: var(--gray-light); font-weight: 600; width: 20px; text-align: center; flex-shrink: 0; }
+
+/* ── Editor ── */
+.editor { padding: 32px; overflow-y: auto; }
+.editor-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--gray-light); text-align: center; gap: 12px; padding: 40px;
+}
+.editor-empty svg { width: 64px; height: 64px; opacity: 0.3; }
+.editor-card {
+  max-width: 640px; margin: 0 auto;
+  background: var(--gray-dark);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius); padding: 32px;
+}
+.field { margin-bottom: 24px; }
+.field label {
+  display: block; font-size: 0.8rem; font-weight: 600;
+  color: var(--gray-light); text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.field input, .field textarea, .field select {
+  width: 100%; padding: 12px 16px;
+  background: var(--gray-medium); color: var(--white);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem;
+  transition: border-color var(--transition);
+  outline: none;
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--orange);
+}
+.field textarea { resize: vertical; min-height: 80px; }
+.field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.field .hint { font-size: 0.78rem; color: var(--gray-light); margin-top: 6px; }
+
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.toggle-row span { font-size: 0.9rem; color: var(--gray-lighter); }
+
+.options-editor { margin-top: 8px; }
+.option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.option-row input { flex: 1; }
+.option-row .btn-icon { flex-shrink: 0; }
+
+.editor-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+/* ── Modals ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--gray-dark); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius); width: 100%; max-height: 90vh;
+  overflow-y: auto; transform: translateY(20px);
+  transition: transform 0.25s ease;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-sm { max-width: 520px; }
+.modal-lg { max-width: 800px; }
+.modal-xl { max-width: 1000px; }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.modal-header h2 { font-size: 1.15rem; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: none; background: rgba(255,255,255,0.06);
+  color: var(--gray-lighter); cursor: pointer; font-size: 1.2rem;
+  transition: all var(--transition);
+}
+.modal-close:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+.modal-body { padding: 28px; }
+.modal-footer { padding: 20px 28px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ── Preview ── */
+.preview-frame {
+  background: var(--black); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm); padding: 32px; max-height: 60vh; overflow-y: auto;
+}
+.preview-field { margin-bottom: 24px; }
+.preview-field label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+.preview-field .required-star { color: var(--orange); margin-left: 2px; }
+.preview-field input, .preview-field textarea, .preview-field select {
+  width: 100%; padding: 12px 16px; background: var(--gray-medium); color: var(--white);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 0.95rem; outline: none;
+}
+.preview-field textarea { resize: vertical; min-height: 80px; }
+.preview-radio-group, .preview-checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+.preview-radio-group label, .preview-checkbox-group label { display: flex; align-items: center; gap: 10px; font-weight: 400; color: var(--gray-lighter); cursor: pointer; }
+.preview-radio-group input, .preview-checkbox-group input { accent-color: var(--orange); width: 18px; height: 18px; }
+
+/* ── Share ── */
+.share-url {
+  display: flex; gap: 10px; align-items: stretch;
+}
+.share-url input {
+  flex: 1; padding: 12px 16px; background: var(--black); color: var(--gray-lighter);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 0.85rem; outline: none;
+}
+.copy-toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--orange); color: var(--white); padding: 12px 28px;
+  border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 999;
+}
+.copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Drop indicator */
+.drop-indicator {
+  height: 2px; background: var(--orange); border-radius: 2px; margin: 2px 8px;
+  transition: opacity 0.15s; opacity: 0;
+}
+.drop-indicator.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="../index.html" class="nav-logo">
+    <img src="../2 (1).png" alt="Reshuffle">
+    <span>Reshuffle</span>
+  </a>
+  <div class="nav-links">
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#work">Work</a>
+    <a href="../tools.html">Tools</a>
+    <a href="../index.html#connect">Connect</a>
+  </div>
+</nav>
+
+<!-- Action Bar -->
+<div class="action-bar">
+  <h1>Onboarding Questionnaire Creator</h1>
+  <div class="action-btns">
+    <button class="btn btn-secondary" onclick="openSettings()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </button>
+    <button class="btn btn-secondary" onclick="openPreview()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Preview
+    </button>
+    <button class="btn btn-primary" onclick="generateLink()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Generate Link
+    </button>
+  </div>
+</div>
+
+<!-- Builder -->
+<div class="builder">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Questions</h2>
+      <button class="btn btn-primary btn-sm" onclick="addQuestion()">+ Add</button>
+    </div>
+    <div class="question-list" id="questionList"></div>
+  </aside>
+
+  <!-- Editor -->
+  <main class="editor" id="editorArea"></main>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Form Settings</h2>
+      <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Form Title</label>
+        <input type="text" id="settingTitle" placeholder="Client Onboarding Questionnaire" oninput="saveSettings()">
+      </div>
+      <div class="field">
+        <label>Form Description</label>
+        <textarea id="settingDesc" placeholder="Please fill out this form so I can better understand your project needs." oninput="saveSettings()"></textarea>
+      </div>
+      <div class="field">
+        <label>Your Email Address</label>
+        <input type="email" id="settingEmail" placeholder="you@example.com" oninput="saveSettings()">
+        <div class="hint">Responses will be sent to this email via mailto: link</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('settingsModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>Form Preview</h2>
+      <button class="modal-close" onclick="closeModal('previewModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-frame" id="previewContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('previewModal')">Close</button>
+      <button class="btn btn-primary" onclick="closeModal('previewModal');generateLink()">Generate Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Share Your Form</h2>
+      <button class="modal-close" onclick="closeModal('shareModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--gray-lighter);margin-bottom:16px;font-size:0.9rem;">Share this link with your clients. The entire form is encoded in the URL — no server needed.</p>
+      <div class="share-url">
+        <input type="text" id="shareUrlInput" readonly>
+        <button class="btn btn-primary" onclick="copyShareLink()">Copy</button>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-secondary" style="width:100%;" onclick="window.open(document.getElementById('shareUrlInput').value,'_blank')">Open in New Tab</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="copy-toast" id="toast"></div>
+
+<script>
+// ── State ──
+const STORAGE_KEY = 'reshuffle_onboarding_questionnaire';
+const QUESTION_TYPES = [
+  { value: 'short_text', label: 'Short Text' },
+  { value: 'long_text', label: 'Long Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'date', label: 'Date' },
+  { value: 'dropdown', label: 'Dropdown' },
+  { value: 'multiple_choice', label: 'Multiple Choice' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'file_upload', label: 'File Upload' }
+];
+
+const DEFAULT_QUESTIONS = [
+  { id: genId(), label: 'What is your full name?', type: 'short_text', required: true, enabled: true, options: [] },
+  { id: genId(), label: 'What is your email address?', type: 'email', required: true, enabled: true, options: [] },
+  { id: genId(), label: 'What is your business/brand name?', type: 'short_text', required: false, enabled: true, options: [] },
+  { id: genId(), label: 'What industry are you in?', type: 'dropdown', required: false, enabled: true, options: ['Tech','Design','Marketing','Finance','Healthcare','Education','Entertainment','Other'] },
+  { id: genId(), label: 'Briefly describe your project', type: 'long_text', required: true, enabled: true, options: [] },
+  { id: genId(), label: 'What is your estimated budget range?', type: 'dropdown', required: false, enabled: true, options: ['Under $500','$500-$1000','$1000-$5000','$5000-$10000','$10000+'] },
+  { id: genId(), label: 'What is your desired timeline?', type: 'dropdown', required: false, enabled: true, options: ['ASAP','1-2 weeks','2-4 weeks','1-2 months','3+ months'] },
+  { id: genId(), label: 'Do you have existing brand guidelines?', type: 'multiple_choice', required: false, enabled: true, options: ['Yes','No','Partially'] },
+  { id: genId(), label: 'What are your main goals for this project?', type: 'long_text', required: true, enabled: true, options: [] },
+  { id: genId(), label: 'How did you hear about me?', type: 'dropdown', required: false, enabled: true, options: ['Social Media','Referral','Google','Portfolio','Other'] }
+];
+
+let state = loadState();
+let selectedId = null;
+let dragState = null;
+
+function genId() { return 'q_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); }
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) return parsed;
+    }
+  } catch(e) {}
+  return {
+    questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+    settings: { title: 'Client Onboarding Questionnaire', description: 'Please fill out this form so I can better understand your project needs.', email: '' }
+  };
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// ── Render sidebar ──
+function renderSidebar() {
+  const list = document.getElementById('questionList');
+  list.innerHTML = '';
+  state.questions.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'q-item' + (q.id === selectedId ? ' active' : '');
+    item.dataset.id = q.id;
+    item.innerHTML = `
+      <span class="drag-handle" data-drag="${q.id}">⠿</span>
+      <span class="q-num">${i + 1}</span>
+      <span class="q-label">${escHtml(q.label || 'Untitled Question')}</span>
+      <button class="q-toggle ${q.enabled ? 'on' : ''}" data-toggle="${q.id}" title="Toggle question"></button>
+    `;
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('[data-toggle]') || e.target.closest('[data-drag]')) return;
+      selectedId = q.id;
+      renderSidebar();
+      renderEditor();
+    });
+    // Toggle
+    item.querySelector('[data-toggle]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      q.enabled = !q.enabled;
+      saveState(); renderSidebar(); renderEditor();
+    });
+    // Drag
+    setupDrag(item, q.id);
+    list.appendChild(item);
+  });
+}
+
+// ── Drag & Drop ──
+function setupDrag(el, id) {
+  const handle = el.querySelector('.drag-handle');
+  let startY = 0, currentIndex = -1, moved = false;
+
+  function onStart(e) {
+    e.preventDefault();
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    startY = y;
+    currentIndex = state.questions.findIndex(q => q.id === id);
+    moved = false;
+    el.classList.add('dragging');
+    dragState = { id, startIndex: currentIndex };
+    document.addEventListener('mousemove', onMove, { passive: false });
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }
+  function onMove(e) {
+    e.preventDefault();
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const diff = y - startY;
+    if (Math.abs(diff) < 10 && !moved) return;
+    moved = true;
+    const list = document.getElementById('questionList');
+    const items = [...list.querySelectorAll('.q-item')];
+    const idx = state.questions.findIndex(q => q.id === id);
+    let targetIdx = idx;
+    for (let i = 0; i < items.length; i++) {
+      const rect = items[i].getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (y < mid) { targetIdx = i; break; }
+      if (i === items.length - 1) targetIdx = items.length;
+    }
+    if (targetIdx !== idx && targetIdx !== idx + 1) {
+      // Reorder
+      const [removed] = state.questions.splice(idx, 1);
+      const insertAt = targetIdx > idx ? targetIdx - 1 : targetIdx;
+      state.questions.splice(insertAt, 0, removed);
+      startY = y;
+      saveState();
+      renderSidebar();
+      const newEl = document.querySelector(`[data-id="${id}"]`);
+      if (newEl) newEl.classList.add('dragging');
+    }
+  }
+  function onEnd() {
+    el.classList.remove('dragging');
+    document.querySelectorAll('.q-item.dragging').forEach(e => e.classList.remove('dragging'));
+    dragState = null;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+    saveState(); renderSidebar();
+  }
+  handle.addEventListener('mousedown', onStart);
+  handle.addEventListener('touchstart', onStart, { passive: false });
+}
+
+// ── Render editor ──
+function renderEditor() {
+  const area = document.getElementById('editorArea');
+  const q = state.questions.find(q => q.id === selectedId);
+  if (!q) {
+    area.innerHTML = `<div class="editor-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg><p>Select a question from the sidebar to edit it,<br>or add a new one.</p></div>`;
+    return;
+  }
+  const needsOptions = ['dropdown','multiple_choice','checkbox'].includes(q.type);
+  let optionsHtml = '';
+  if (needsOptions) {
+    optionsHtml = `<div class="field"><label>Options</label><div class="options-editor" id="optionsEditor">`;
+    (q.options || []).forEach((opt, i) => {
+      optionsHtml += `<div class="option-row"><input type="text" value="${escAttr(opt)}" data-opt-index="${i}" placeholder="Option ${i+1}"><button class="btn btn-icon btn-danger btn-sm" onclick="removeOption(${i})" title="Remove">✕</button></div>`;
+    });
+    optionsHtml += `</div><button class="btn btn-secondary btn-sm" onclick="addOption()" style="margin-top:8px;">+ Add Option</button></div>`;
+  }
+
+  area.innerHTML = `
+    <div class="editor-card">
+      <div class="field">
+        <label>Question Label</label>
+        <input type="text" id="edLabel" value="${escAttr(q.label)}" placeholder="Enter your question…">
+      </div>
+      <div class="field">
+        <label>Question Type</label>
+        <select id="edType">${QUESTION_TYPES.map(t => `<option value="${t.value}" ${q.type===t.value?'selected':''}>${t.label}</option>`).join('')}</select>
+      </div>
+      ${optionsHtml}
+      <div class="toggle-row">
+        <span>Required</span>
+        <button class="q-toggle ${q.required?'on':''}" id="edRequired"></button>
+      </div>
+      <div class="toggle-row">
+        <span>Enabled</span>
+        <button class="q-toggle ${q.enabled?'on':''}" id="edEnabled"></button>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${q.id}')">Delete Question</button>
+      </div>
+    </div>`;
+
+  // Bind events
+  document.getElementById('edLabel').addEventListener('input', (e) => { q.label = e.target.value; saveState(); renderSidebar(); });
+  document.getElementById('edType').addEventListener('change', (e) => {
+    q.type = e.target.value;
+    if (['dropdown','multiple_choice','checkbox'].includes(q.type) && (!q.options || q.options.length === 0)) {
+      q.options = ['Option 1','Option 2'];
+    }
+    saveState(); renderEditor(); renderSidebar();
+  });
+  document.getElementById('edRequired').addEventListener('click', () => { q.required = !q.required; saveState(); renderEditor(); });
+  document.getElementById('edEnabled').addEventListener('click', () => { q.enabled = !q.enabled; saveState(); renderEditor(); renderSidebar(); });
+  // Option inputs
+  document.querySelectorAll('[data-opt-index]').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      q.options[parseInt(e.target.dataset.optIndex)] = e.target.value;
+      saveState();
+    });
+  });
+}
+
+function addOption() {
+  const q = state.questions.find(q => q.id === selectedId);
+  if (!q) return;
+  if (!q.options) q.options = [];
+  q.options.push('Option ' + (q.options.length + 1));
+  saveState(); renderEditor();
+}
+
+function removeOption(i) {
+  const q = state.questions.find(q => q.id === selectedId);
+  if (!q || !q.options) return;
+  q.options.splice(i, 1);
+  saveState(); renderEditor();
+}
+
+function addQuestion() {
+  const q = { id: genId(), label: '', type: 'short_text', required: false, enabled: true, options: [] };
+  state.questions.push(q);
+  selectedId = q.id;
+  saveState(); renderSidebar(); renderEditor();
+  // Focus the label input
+  setTimeout(() => { const el = document.getElementById('edLabel'); if (el) el.focus(); }, 50);
+}
+
+function deleteQuestion(id) {
+  state.questions = state.questions.filter(q => q.id !== id);
+  if (selectedId === id) selectedId = null;
+  saveState(); renderSidebar(); renderEditor();
+}
+
+// ── Settings ──
+function openSettings() {
+  document.getElementById('settingTitle').value = state.settings.title || '';
+  document.getElementById('settingDesc').value = state.settings.description || '';
+  document.getElementById('settingEmail').value = state.settings.email || '';
+  openModal('settingsModal');
+}
+
+function saveSettings() {
+  state.settings.title = document.getElementById('settingTitle').value;
+  state.settings.description = document.getElementById('settingDesc').value;
+  state.settings.email = document.getElementById('settingEmail').value;
+  saveState();
+}
+
+// ── Preview ──
+function openPreview() {
+  const container = document.getElementById('previewContent');
+  const enabledQs = state.questions.filter(q => q.enabled);
+  if (enabledQs.length === 0) {
+    container.innerHTML = '<p style="color:var(--gray-light);text-align:center;padding:40px;">No enabled questions. Toggle some on in the sidebar.</p>';
+    openModal('previewModal');
+    return;
+  }
+  let html = '';
+  if (state.settings.title) html += `<h2 style="font-size:1.4rem;font-weight:700;margin-bottom:8px;">${escHtml(state.settings.title)}</h2>`;
+  if (state.settings.description) html += `<p style="color:var(--gray-lighter);margin-bottom:28px;font-size:0.95rem;">${escHtml(state.settings.description)}</p>`;
+  enabledQs.forEach(q => {
+    html += renderPreviewField(q);
+  });
+  html += `<div style="margin-top:28px;"><button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:1rem;" disabled>Submit (preview only)</button></div>`;
+  container.innerHTML = html;
+  openModal('previewModal');
+}
+
+function renderPreviewField(q) {
+  const req = q.required ? '<span class="required-star">*</span>' : '';
+  const label = `<label>${escHtml(q.label)}${req}</label>`;
+  let input = '';
+  switch(q.type) {
+    case 'short_text': input = `<input type="text" placeholder="Your answer" disabled>`; break;
+    case 'long_text': input = `<textarea placeholder="Your answer" disabled></textarea>`; break;
+    case 'email': input = `<input type="email" placeholder="email@example.com" disabled>`; break;
+    case 'phone': input = `<input type="tel" placeholder="+1 (555) 000-0000" disabled>`; break;
+    case 'date': input = `<input type="date" disabled>`; break;
+    case 'file_upload': input = `<input type="file" disabled style="color:var(--gray-light);">`; break;
+    case 'dropdown':
+      input = `<select disabled><option value="">Select…</option>${(q.options||[]).map(o => `<option>${escHtml(o)}</option>`).join('')}</select>`;
+      break;
+    case 'multiple_choice':
+      input = `<div class="preview-radio-group">${(q.options||[]).map(o => `<label><input type="radio" name="preview_${escAttr(q.id)}" disabled> ${escHtml(o)}</label>`).join('')}</div>`;
+      break;
+    case 'checkbox':
+      input = `<div class="preview-checkbox-group">${(q.options||[]).map(o => `<label><input type="checkbox" disabled> ${escHtml(o)}</label>`).join('')}</div>`;
+      break;
+  }
+  return `<div class="preview-field">${label}${input}</div>`;
+}
+
+// ── Generate Link ──
+function generateLink() {
+  const enabledQs = state.questions.filter(q => q.enabled);
+  if (enabledQs.length === 0) {
+    showToast('No enabled questions to share');
+    return;
+  }
+  const config = {
+    title: state.settings.title,
+    description: state.settings.description,
+    email: state.settings.email,
+    questions: enabledQs.map(q => ({
+      id: q.id, label: q.label, type: q.type,
+      required: q.required, options: q.options || []
+    }))
+  };
+  const json = JSON.stringify(config);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+  const base = window.location.href.replace(/[^/]*$/, '');
+  const url = base + 'form.html#' + encoded;
+  document.getElementById('shareUrlInput').value = url;
+  openModal('shareModal');
+}
+
+function copyShareLink() {
+  const input = document.getElementById('shareUrlInput');
+  navigator.clipboard.writeText(input.value).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+    showToast('Link copied!');
+  });
+}
+
+// ── Modals ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// Close modals on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Helpers ──
+function escHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+function escAttr(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Init ──
+renderSidebar();
+renderEditor();
+</script>
+</body>
+</html>
