@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# Uploads and downloads (user-generated content)
+uploads/
+downloads/videos/*
+downloads/temp/*
+downloads/thumbnails/*
+downloads/metadata/*
+
+# Large media files in root
+*.mp4
+*.mov
+*.avi
