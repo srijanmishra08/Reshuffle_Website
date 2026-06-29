@@ -123,10 +123,11 @@
         var io = new IntersectionObserver(function (entries) {
             entries.forEach(function (e) {
                 var vd = e.target;
-                if (e.isIntersecting) { vd.play().catch(function(){}); }
+                // play the moment any part of the reel scrolls into view
+                if (e.isIntersecting) { var p = vd.play(); if (p && p.catch) p.catch(function(){}); }
                 else { vd.pause(); }
             });
-        }, { threshold: 0.4 });
+        }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
         book.querySelectorAll('video').forEach(function (vd) { io.observe(vd); });
     }
 

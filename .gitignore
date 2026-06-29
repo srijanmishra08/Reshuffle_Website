@@ -28,3 +28,6 @@ downloads/metadata/*
 *.mp4
 *.mov
 *.avi
+# ...but portfolio reels are part of the site
+!assets/projects/*.mp4
+.vercel
