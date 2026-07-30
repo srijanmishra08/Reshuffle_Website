@@ -384,11 +384,14 @@ a {
     background: linear-gradient(to right, transparent, var(--gray-medium), transparent);
 }
 
-.about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6rem;
-    align-items: start;
+.about-statement {
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: var(--white);
+    max-width: 100%;
+    margin-top: 1.5rem;
 }
 
 .about-headline {
